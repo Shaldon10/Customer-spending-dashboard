@@ -9,18 +9,23 @@ on:
       - synchronize
       - reopened
       - ready_for_review
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
 
 concurrency:
-  group: capitech-ci-${{ github.event.pull_request.number }}
+  group: capitech-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   frontend:
     name: Frontend — build and test
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -29,10 +34,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        shell: bash
+        run: |
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
+            npm ci
+          else
+            npm install
+          fi
 
       - name: Run Jest tests
         run: npx nx test dashboard --ci
