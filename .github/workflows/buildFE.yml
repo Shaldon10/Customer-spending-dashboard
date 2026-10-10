@@ -38,6 +38,7 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
+          cd capitech
           if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
             npm ci
           else
