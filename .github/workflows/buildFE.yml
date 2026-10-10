@@ -46,7 +46,9 @@ jobs:
           fi
 
       - name: Run Jest tests
-        run: npx nx test dashboard --ci
+        working-directory: capitech
+        run: npx nx test capitech --ci
 
       - name: Build Angular application
+        working-directory: capitech
         run: npx nx build capitech
