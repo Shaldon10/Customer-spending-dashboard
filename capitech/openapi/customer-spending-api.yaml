@@ -1,0 +1,533 @@
+openapi: 3.0.3
+info:
+  title: Customer Spending Insights API
+  version: 1.0.0
+  description: API endpoints for customer spending dashboard functionality.
+
+servers:
+  - url: /api
+    description: Local API server
+
+paths:
+  /customers/{customerId}/profile:
+    get:
+      summary: Get customer profile
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema:
+            type: string
+          description: Customer identifier
+      responses:
+        '200':
+          description: Customer profile details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerProfile'
+
+  /customers/{customerId}/spending/summary:
+    get:
+      summary: Get spending summary for a period
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: period
+          required: false
+          schema:
+            type: string
+            enum: [7d, 30d, 90d, 1y]
+            default: 30d
+      responses:
+        '200':
+          description: Spending summary for the selected period
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpendingSummary'
+
+  /customers/{customerId}/spending/categories:
+    get:
+      summary: Get spending by category with optional filters
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: period
+          required: false
+          schema:
+            type: string
+            enum: [7d, 30d, 90d, 1y]
+            default: 30d
+        - in: query
+          name: startDate
+          required: false
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: endDate
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Category spending breakdown
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryBreakdownResponse'
+
+  /customers/{customerId}/spending/trends:
+    get:
+      summary: Get monthly spending trends
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: months
+          required: false
+          schema:
+            type: integer
+            default: 12
+            maximum: 24
+      responses:
+        '200':
+          description: Monthly spending trends
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpendingTrendsResponse'
+
+  /customers/{customerId}/transactions:
+    get:
+      summary: Get customer transactions with filtering and pagination
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - in: query
+          name: offset
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - in: query
+          name: category
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: startDate
+          required: false
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: endDate
+          required: false
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: sortBy
+          required: false
+          schema:
+            type: string
+            enum: [date_desc, date_asc, amount_desc, amount_asc]
+            default: date_desc
+      responses:
+        '200':
+          description: Transactions list with pagination metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionsResponse'
+
+  /customers/{customerId}/goals:
+    get:
+      summary: Get customer spending goals
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Spending goals for the customer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalsResponse'
+
+  /customers/{customerId}/filters:
+    get:
+      summary: Get categories and date range presets used in dashboard filters
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Available filter metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilterMetadataResponse'
+
+components:
+  schemas:
+    CustomerProfile:
+      type: object
+      required:
+        - customerId
+        - name
+        - email
+        - joinDate
+        - accountType
+        - totalSpent
+        - currency
+      properties:
+        customerId:
+          type: string
+          example: "12345"
+        name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          format: email
+          example: john.doe@email.com
+        joinDate:
+          type: string
+          format: date
+          example: "2023-01-15"
+        accountType:
+          type: string
+          example: premium
+        totalSpent:
+          type: number
+          format: double
+          example: 15420.5
+        currency:
+          type: string
+          example: ZAR
+
+    ComparedToPrevious:
+      type: object
+      properties:
+        spentChange:
+          type: number
+          example: 12.5
+        transactionChange:
+          type: number
+          example: -3.2
+
+    SpendingSummary:
+      type: object
+      required:
+        - period
+        - totalSpent
+        - transactionCount
+        - averageTransaction
+        - topCategory
+      properties:
+        period:
+          type: string
+          enum: [7d, 30d, 90d, 1y]
+          example: 30d
+        totalSpent:
+          type: number
+          example: 4250.75
+        transactionCount:
+          type: integer
+          example: 47
+        averageTransaction:
+          type: number
+          example: 90.44
+        topCategory:
+          type: string
+          example: Groceries
+        comparedToPrevious:
+          $ref: '#/components/schemas/ComparedToPrevious'
+
+    CategorySummary:
+      type: object
+      required:
+        - name
+        - amount
+        - percentage
+        - transactionCount
+        - color
+        - icon
+      properties:
+        name:
+          type: string
+          example: Groceries
+        amount:
+          type: number
+          example: 1250.3
+        percentage:
+          type: number
+          example: 29.4
+        transactionCount:
+          type: integer
+          example: 15
+        color:
+          type: string
+          example: "#FF6B6B"
+        icon:
+          type: string
+          example: shopping-cart
+
+    DateRange:
+      type: object
+      required:
+        - startDate
+        - endDate
+      properties:
+        startDate:
+          type: string
+          format: date
+          example: "2024-08-16"
+        endDate:
+          type: string
+          format: date
+          example: "2024-09-16"
+
+    CategoryBreakdownResponse:
+      type: object
+      required:
+        - dateRange
+        - totalAmount
+        - categories
+      properties:
+        dateRange:
+          $ref: '#/components/schemas/DateRange'
+        totalAmount:
+          type: number
+          example: 4250.75
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategorySummary'
+
+    MonthlyTrend:
+      type: object
+      required:
+        - month
+        - totalSpent
+        - transactionCount
+        - averageTransaction
+      properties:
+        month:
+          type: string
+          example: "2024-01"
+        totalSpent:
+          type: number
+          example: 3890.25
+        transactionCount:
+          type: integer
+          example: 42
+        averageTransaction:
+          type: number
+          example: 92.62
+
+    SpendingTrendsResponse:
+      type: object
+      required:
+        - trends
+      properties:
+        trends:
+          type: array
+          items:
+            $ref: '#/components/schemas/MonthlyTrend'
+
+    Transaction:
+      type: object
+      required:
+        - id
+        - date
+        - merchant
+        - category
+        - amount
+        - description
+        - paymentMethod
+        - icon
+        - categoryColor
+      properties:
+        id:
+          type: string
+          example: txn_123456
+        date:
+          type: string
+          format: date-time
+          example: "2024-09-16T14:30:00Z"
+        merchant:
+          type: string
+          example: Pick n Pay
+        category:
+          type: string
+          example: Groceries
+        amount:
+          type: number
+          example: 245.8
+        description:
+          type: string
+          example: Weekly groceries
+        paymentMethod:
+          type: string
+          example: Credit Card
+        icon:
+          type: string
+          example: shopping-cart
+        categoryColor:
+          type: string
+          example: "#FF6B6B"
+
+    Pagination:
+      type: object
+      required:
+        - total
+        - limit
+        - offset
+        - hasMore
+      properties:
+        total:
+          type: integer
+          example: 1250
+        limit:
+          type: integer
+          example: 20
+        offset:
+          type: integer
+          example: 0
+        hasMore:
+          type: boolean
+          example: true
+
+    TransactionsResponse:
+      type: object
+      required:
+        - transactions
+        - pagination
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    Goal:
+      type: object
+      required:
+        - id
+        - category
+        - monthlyBudget
+        - currentSpent
+        - percentageUsed
+        - daysRemaining
+        - status
+      properties:
+        id:
+          type: string
+          example: goal_001
+        category:
+          type: string
+          example: Entertainment
+        monthlyBudget:
+          type: number
+          example: 1000
+        currentSpent:
+          type: number
+          example: 650.3
+        percentageUsed:
+          type: number
+          example: 65.03
+        daysRemaining:
+          type: integer
+          example: 12
+        status:
+          type: string
+          enum: [on_track, warning, exceeded]
+          example: on_track
+
+    GoalsResponse:
+      type: object
+      required:
+        - goals
+      properties:
+        goals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Goal'
+
+    CategoryOption:
+      type: object
+      required:
+        - name
+        - color
+        - icon
+      properties:
+        name:
+          type: string
+          example: Groceries
+        color:
+          type: string
+          example: "#FF6B6B"
+        icon:
+          type: string
+          example: shopping-cart
+
+    DateRangePreset:
+      type: object
+      required:
+        - label
+        - value
+      properties:
+        label:
+          type: string
+          example: Last 30 days
+        value:
+          type: string
+          example: 30d
+
+    FilterMetadataResponse:
+      type: object
+      required:
+        - categories
+        - dateRangePresets
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryOption'
+        dateRangePresets:
+          type: array
+          items:
+            $ref: '#/components/schemas/DateRangePreset'
