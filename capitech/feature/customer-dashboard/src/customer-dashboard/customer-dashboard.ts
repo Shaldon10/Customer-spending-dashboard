@@ -4,6 +4,6 @@ import { Component } from '@angular/core';
   selector: 'lib-customer-dashboard',
   imports: [],
   templateUrl: './customer-dashboard.html',
-  styleUrl: './customer-dashboard.css'
+  styleUrl: './customer-dashboard.scss'
 })
 export class CustomerDashboard {}
