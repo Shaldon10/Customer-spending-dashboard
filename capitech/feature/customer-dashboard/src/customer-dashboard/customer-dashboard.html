@@ -1,1 +1,164 @@
-<p>CustomerDashboard works!</p>
+<div class="dashboard-shell">
+  <aside class="sidebar" aria-label="Sidebar navigation">
+    <div class="brand">
+      <div class="brand-mark">C</div>
+      <div>
+        <p class="eyebrow">Capitech</p>
+        <h1>Dashboard</h1>
+      </div>
+    </div>
+
+    <nav class="nav" aria-label="Main navigation">
+      <button class="nav-item active" type="button">Overview</button>
+      <button class="nav-item" type="button">Spending</button>
+      <button class="nav-item" type="button">Transactions</button>
+      <button class="nav-item" type="button">Goals</button>
+      <button class="nav-item" type="button">Reports</button>
+    </nav>
+
+    <div class="sidebar-card">
+      <span class="mini-label">Monthly target</span>
+      <strong>R 18,400</strong>
+      <small>76% of plan</small>
+    </div>
+  </aside>
+
+  <main class="main-panel">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Welcome back</p>
+        <h2>Customer spending overview</h2>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="secondary-btn" type="button">This month</button>
+        <button class="primary-btn" type="button">Export</button>
+      </div>
+    </header>
+
+    <section class="summary-grid" aria-label="Summary cards">
+      <article class="stat-card accent">
+        <span>Total spent</span>
+        <strong>R 42,580</strong>
+        <small>+8.4% vs last month</small>
+      </article>
+      <article class="stat-card">
+        <span>Transactions</span>
+        <strong>1,284</strong>
+        <small>+12 this week</small>
+      </article>
+      <article class="stat-card">
+        <span>Avg. ticket</span>
+        <strong>R 1,240</strong>
+        <small>+3.1% increase</small>
+      </article>
+      <article class="stat-card">
+        <span>Top category</span>
+        <strong>Groceries</strong>
+        <small>R 9,420</small>
+      </article>
+    </section>
+
+    <section class="content-grid">
+      <article class="panel chart-panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Performance</p>
+            <h3>Spending trend</h3>
+          </div>
+          <button class="ghost-btn" type="button">12M</button>
+        </div>
+
+        <div class="chart-bars" aria-hidden="true">
+          <span style="height: 34%"></span>
+          <span style="height: 52%"></span>
+          <span style="height: 46%"></span>
+          <span style="height: 65%"></span>
+          <span style="height: 57%"></span>
+          <span style="height: 80%"></span>
+          <span style="height: 70%"></span>
+          <span style="height: 92%"></span>
+          <span style="height: 78%"></span>
+          <span style="height: 88%"></span>
+          <span style="height: 62%"></span>
+          <span style="height: 100%"></span>
+        </div>
+      </article>
+
+      <article class="panel side-panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Breakdown</p>
+            <h3>Categories</h3>
+          </div>
+        </div>
+
+        <ul class="category-list">
+          <li>
+            <span class="category-meta"><i class="dot dot-red"></i> Groceries</span>
+            <strong>38%</strong>
+          </li>
+          <li>
+            <span class="category-meta"><i class="dot dot-blue"></i> Transport</span>
+            <strong>21%</strong>
+          </li>
+          <li>
+            <span class="category-meta"><i class="dot dot-gold"></i> Dining</span>
+            <strong>18%</strong>
+          </li>
+          <li>
+            <span class="category-meta"><i class="dot dot-green"></i> Utilities</span>
+            <strong>13%</strong>
+          </li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Recent activity</p>
+          <h3>Transactions</h3>
+        </div>
+        <button class="ghost-btn" type="button">View all</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Merchant</th>
+            <th>Category</th>
+            <th>Date</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Pick n Pay</td>
+            <td>Groceries</td>
+            <td>12 Sep 2026</td>
+            <td class="amount">-R 845.20</td>
+          </tr>
+          <tr>
+            <td>Uber</td>
+            <td>Transport</td>
+            <td>11 Sep 2026</td>
+            <td class="amount">-R 230.00</td>
+          </tr>
+          <tr>
+            <td>Netflix</td>
+            <td>Entertainment</td>
+            <td>09 Sep 2026</td>
+            <td class="amount">-R 169.00</td>
+          </tr>
+          <tr>
+            <td>Salary Deposit</td>
+            <td>Income</td>
+            <td>08 Sep 2026</td>
+            <td class="amount positive">+R 18,400.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</div>
