@@ -25,6 +25,15 @@
     "paths": {
       "@capitech/customer-dashboard": [
         "./feature/customer-dashboard/src/index.ts"
+      ],
+      "@capitech/transactions": [
+        "./feature/transactions/src/index.ts"
+      ],
+      "@capitech/spending-analysis": [
+        "./feature/spending-analysis/src/index.ts"
+      ],
+      "@capitech/budget-goals": [
+        "./feature/budget-goals/src/index.ts"
       ]
     }
   },

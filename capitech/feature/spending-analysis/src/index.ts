@@ -1,0 +1,1 @@
+export * from './lib/spending-analysis/spending-analysis';

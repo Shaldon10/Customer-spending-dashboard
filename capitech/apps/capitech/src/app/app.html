@@ -1,1 +1,28 @@
-<router-outlet></router-outlet>
+<div class="app-shell">
+	<aside class="sidebar" aria-label="Main navigation">
+		<a class="brand" routerLink="/" aria-label="Capitech Insights home">
+			<span class="brand-mark" aria-hidden="true">C</span>
+			<span>
+				<span class="brand-name">Capitech</span>
+				<span class="brand-caption">INSIGHTS</span>
+			</span>
+		</a>
+
+		<p class="nav-label">Workspace</p>
+		<nav class="nav">
+			<a class="nav-item" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">Overview</a>
+			<a class="nav-item" routerLink="/transactions" routerLinkActive="active" ariaCurrentWhenActive="page">Transactions</a>
+			<a class="nav-item" routerLink="/spending-analysis" routerLinkActive="active" ariaCurrentWhenActive="page">Spending analysis</a>
+			<a class="nav-item" routerLink="/budget-goals" routerLinkActive="active" ariaCurrentWhenActive="page">Budget goals</a>
+		</nav>
+
+		<div class="account">
+			<span class="avatar" aria-hidden="true">JD</span>
+			<span><strong>Jordan Davis</strong><small>Customer account</small></span>
+		</div>
+	</aside>
+
+	<main class="page-content">
+		<router-outlet></router-outlet>
+	</main>
+</div>
