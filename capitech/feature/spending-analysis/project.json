@@ -1,0 +1,23 @@
+{
+  "name": "spending-analysis",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "feature/spending-analysis/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
+      "options": {
+        "jestConfig": "feature/spending-analysis/jest.config.cts",
+        "tsConfig": "feature/spending-analysis/tsconfig.spec.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

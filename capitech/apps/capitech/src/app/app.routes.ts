@@ -6,4 +6,19 @@ export const appRoutes: Route[] = [
     loadComponent: () =>
       import('@capitech/customer-dashboard').then((m) => m.CustomerDashboard),
   },
+  {
+    path: 'transactions',
+    loadComponent: () =>
+      import('@capitech/transactions').then((m) => m.Transactions),
+  },
+  {
+    path: 'spending-analysis',
+    loadComponent: () =>
+      import('@capitech/spending-analysis').then((m) => m.SpendingAnalysis),
+  },
+  {
+    path: 'budget-goals',
+    loadComponent: () =>
+      import('@capitech/budget-goals').then((m) => m.BudgetGoals),
+  },
 ];
