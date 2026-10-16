@@ -21,4 +21,9 @@ export const appRoutes: Route[] = [
     loadComponent: () =>
       import('@capitech/budget-goals').then((m) => m.BudgetGoals),
   },
+  {
+    path: 'customer-profile',
+    loadComponent: () =>
+      import('@capitech/customer-profile').then((m) => m.CustomerProfile),
+  },
 ];

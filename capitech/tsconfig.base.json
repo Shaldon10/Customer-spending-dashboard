@@ -34,6 +34,12 @@
       ],
       "@capitech/budget-goals": [
         "./feature/budget-goals/src/index.ts"
+      ],
+      "@capitech/customer-profile": [
+        "./feature/customer-profile/src/index.ts"
+      ],
+      "@capitech/data-access": [
+        "./feature/data-access/index.ts"
       ]
     }
   },
