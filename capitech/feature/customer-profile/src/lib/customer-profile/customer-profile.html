@@ -1,0 +1,47 @@
+<section class="page">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">Account</p>
+      <h1>Customer profile</h1>
+      <p class="subheading">Personal details and account summary.</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="status-message" aria-live="polite">Loading customer profile...</p>
+  }
+
+  @if (error(); as message) {
+    <div class="error-message" role="alert">
+      <p>{{ message }}</p>
+      <button type="button" (click)="loadProfile()" [disabled]="loading()">Retry</button>
+    </div>
+  }
+
+  @if (profile(); as customer) {
+    <article class="profile-panel" aria-label="Customer account details">
+      <header class="profile-header">
+        <div>
+          <h2>{{ customer.name }}</h2>
+          <p>Customer ID {{ customer.customerId }}</p>
+        </div>
+        <span class="account-type">{{ customer.accountType }} account</span>
+      </header>
+
+      <dl class="profile-details">
+        <div>
+          <dt>Email</dt>
+          <dd>{{ customer.email }}</dd>
+        </div>
+        <div>
+          <dt>Member since</dt>
+          <dd>{{ formatJoinDate(customer.joinDate) }}</dd>
+        </div>
+        <div class="total-spent">
+          <dt>Total spent</dt>
+          <dd>{{ customer.currency }} {{ customer.totalSpent | number:'1.2-2':'en-ZA' }}</dd>
+        </div>
+      </dl>
+    </article>
+  }
+</section>

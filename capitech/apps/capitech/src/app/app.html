@@ -16,10 +16,17 @@
 			<a class="nav-item" routerLink="/budget-goals" routerLinkActive="active" ariaCurrentWhenActive="page">Budget goals</a>
 		</nav>
 
-		<div class="account">
-			<span class="avatar" aria-hidden="true">JD</span>
-			<span><strong>Jordan Davis</strong><small>Customer account</small></span>
-		</div>
+		<button class="account" type="button" routerLink="/customer-profile" aria-describedby="account-tooltip">
+			<span class="avatar" aria-hidden="true">{{ initials() }}</span>
+			<span class="account-copy">
+				<strong>{{ profile()?.name ?? (loading() ? 'Loading profile' : 'Profile unavailable') }}</strong>
+				<small>{{ profileId() }}</small>
+			</span>
+			<span class="account-tooltip" id="account-tooltip" role="tooltip">
+				<span>Total spent</span>
+				<strong>{{ totalSpent() }}</strong>
+			</span>
+		</button>
 	</aside>
 
 	<main class="page-content">
