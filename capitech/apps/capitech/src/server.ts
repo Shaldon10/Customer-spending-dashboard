@@ -7,6 +7,7 @@ import {
 import express from 'express';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { mockApiRouter } from './mock-api';
 
 const serverDistFolder = dirname(fileURLToPath(import.meta.url));
 const browserDistFolder = resolve(serverDistFolder, '../browser');
@@ -14,17 +15,7 @@ const browserDistFolder = resolve(serverDistFolder, '../browser');
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
-app.get('/api/customers/:customerId/profile', (req, res) => {
-  res.json({
-    customerId: req.params['customerId'],
-    name: 'John Doe',
-    email: 'john.doe@email.com',
-    joinDate: '2023-01-15',
-    accountType: 'premium',
-    totalSpent: 15420.5,
-    currency: 'ZAR',
-  });
-});
+app.use('/api', mockApiRouter);
 
 /**
  * Serve static files from /browser

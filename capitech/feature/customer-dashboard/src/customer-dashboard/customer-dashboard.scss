@@ -64,6 +64,7 @@ button {
 .ghost-btn {
   background: #edf3ff;
   color: #1d3557;
+  text-decoration: none;
 }
 
 .summary-grid {
@@ -129,7 +130,7 @@ button {
 .chart-bars {
   height: 220px;
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(20px, 1fr));
   align-items: end;
   gap: 0.7rem;
   padding: 1rem 0.5rem 0;

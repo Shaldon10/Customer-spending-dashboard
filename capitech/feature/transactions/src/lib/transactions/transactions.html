@@ -1,36 +1,102 @@
 <section class="page">
-	<header class="page-heading">
-		<div>
-			<p class="eyebrow">Activity</p>
-			<h1>Transactions</h1>
-			<p class="subheading">Review recent account activity and spending.</p>
-		</div>
-		<span class="period">Last 30 days</span>
-	</header>
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">Activity</p>
+      <h1>Transactions</h1>
+      <p class="subheading">Review recent account activity and spending.</p>
+    </div>
+    <span class="period">Last 30 days</span>
+  </header>
 
-	<section class="metrics" aria-label="Transaction summary">
-		<article class="metric"><span>Transactions</span><strong>128</strong><small>This month</small></article>
-		<article class="metric"><span>Total outflow</span><strong>R 18,420</strong><small>Across 6 categories</small></article>
-		<article class="metric"><span>Largest purchase</span><strong>R 2,850</strong><small>Home &amp; living</small></article>
-	</section>
+  @if (loading()) {
+    <p role="status" aria-live="polite">Loading transactions...</p>
+  }
 
-	<section class="list-panel">
-		<div class="list-heading">
-			<div><h2>Recent transactions</h2><p>All account activity</p></div>
-			<span class="result-count">128 entries</span>
-		</div>
-		<div class="table-wrap">
-			<table>
-				<thead><tr><th>Merchant</th><th>Category</th><th>Date</th><th>Status</th><th class="numeric">Amount</th></tr></thead>
-				<tbody>
-					<tr><td><strong>FreshMart Groceries</strong><small>Card ending 2048</small></td><td>Groceries</td><td>12 Oct 2026</td><td><span class="status complete">Completed</span></td><td class="numeric amount">− R 428.50</td></tr>
-					<tr><td><strong>Shell Fuel Station</strong><small>Card ending 2048</small></td><td>Transport</td><td>11 Oct 2026</td><td><span class="status complete">Completed</span></td><td class="numeric amount">− R 750.00</td></tr>
-					<tr><td><strong>The Daily Grind</strong><small>Card ending 2048</small></td><td>Dining</td><td>10 Oct 2026</td><td><span class="status complete">Completed</span></td><td class="numeric amount">− R 86.00</td></tr>
-					<tr><td><strong>Urban Outfitters</strong><small>Card ending 2048</small></td><td>Shopping</td><td>7 Oct 2026</td><td><span class="status complete">Completed</span></td><td class="numeric amount">− R 1,299.00</td></tr>
-					<tr><td><strong>Monthly salary</strong><small>Capitech Holdings</small></td><td>Income</td><td>1 Oct 2026</td><td><span class="status received">Received</span></td><td class="numeric amount income">+ R 28,500.00</td></tr>
-					<tr><td><strong>Streamline Media</strong><small>Recurring payment</small></td><td>Entertainment</td><td>1 Oct 2026</td><td><span class="status complete">Completed</span></td><td class="numeric amount">− R 169.00</td></tr>
-				</tbody>
-			</table>
-		</div>
-	</section>
+  @if (error(); as message) {
+    <div class="error-message" role="alert">
+      <p>{{ message }}</p>
+      <button type="button" (click)="loadTransactions()" [disabled]="loading()">Retry</button>
+    </div>
+  }
+
+  @if (data(); as transactionData) {
+    <section class="metrics" aria-label="Transaction summary">
+      <article class="metric">
+        <span>Matching transactions</span>
+        <strong>{{ transactionData.transactions.pagination.total | number:'1.0-0':'en-ZA' }}</strong>
+        <small>For the selected filters</small>
+      </article>
+      <article class="metric">
+        <span>Total spending</span>
+        <strong>R {{ transactionData.summary.totalSpent | number:'1.2-2':'en-ZA' }}</strong>
+        <small>{{ transactionData.summary.period }} period</small>
+      </article>
+      <article class="metric">
+        <span>Average transaction</span>
+        <strong>R {{ transactionData.summary.averageTransaction | number:'1.2-2':'en-ZA' }}</strong>
+        <small>{{ transactionData.summary.transactionCount }} transactions</small>
+      </article>
+    </section>
+
+    <section class="list-panel">
+      <div class="list-heading">
+        <div><h2>Recent transactions</h2><p>Filter and sort account activity</p></div>
+        <span class="result-count">{{ transactionData.transactions.pagination.total }} entries</span>
+      </div>
+      <div class="filters" aria-label="Transaction filters">
+        <label>
+          Category
+          <select [value]="category()" (change)="onCategoryChange($event)">
+            <option value="">All categories</option>
+            @for (option of transactionData.filters.categories; track option.name) {
+              <option [value]="option.name">{{ option.name }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          Sort by
+          <select [value]="sortBy()" (change)="onSortChange($event)">
+            <option value="date_desc">Newest first</option>
+            <option value="date_asc">Oldest first</option>
+            <option value="amount_desc">Highest amount</option>
+            <option value="amount_asc">Lowest amount</option>
+          </select>
+        </label>
+        <label>
+          From
+          <input type="date" [value]="startDate()" (change)="onStartDateChange($event)">
+        </label>
+        <label>
+          To
+          <input type="date" [value]="endDate()" (change)="onEndDateChange($event)">
+        </label>
+        <button type="button" (click)="applyDateRange()" [disabled]="loading()">Apply dates</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Merchant</th><th>Category</th><th>Date</th><th>Payment method</th><th class="numeric">Amount</th></tr>
+          </thead>
+          <tbody>
+            @for (transaction of transactionData.transactions.transactions; track transaction.id) {
+              <tr>
+                <td><strong>{{ transaction.merchant }}</strong><small>{{ transaction.description }}</small></td>
+                <td>{{ transaction.category }}</td>
+                <td>{{ formatDate(transaction.date) }}</td>
+                <td>{{ transaction.paymentMethod }}</td>
+                <td class="numeric amount">− R {{ transaction.amount | number:'1.2-2':'en-ZA' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5">No transactions match these filters.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <nav class="pagination" aria-label="Transaction pages">
+        <button type="button" (click)="previousPage()" [disabled]="offset() === 0 || loading()">Previous</button>
+        <span>Showing {{ transactionData.transactions.pagination.total === 0 ? 0 : transactionData.transactions.pagination.offset + 1 }}–{{ transactionData.transactions.pagination.offset + transactionData.transactions.transactions.length }} of {{ transactionData.transactions.pagination.total }}</span>
+        <button type="button" (click)="nextPage()" [disabled]="!transactionData.transactions.pagination.hasMore || loading()">Next</button>
+      </nav>
+    </section>
+  }
 </section>
