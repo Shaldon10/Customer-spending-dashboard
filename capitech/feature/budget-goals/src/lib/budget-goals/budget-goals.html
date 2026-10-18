@@ -1,27 +1,82 @@
 <section class="page">
-	<header class="page-heading">
-		<div>
-			<p class="eyebrow">Plan ahead</p>
-			<h1>Budget goals</h1>
-			<p class="subheading">Keep monthly spending aligned with your priorities.</p>
-		</div>
-		<span class="period">October 2026</span>
-	</header>
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">Plan ahead</p>
+      <h1>Budget goals</h1>
+      <p class="subheading">Keep monthly spending aligned with your priorities.</p>
+    </div>
+    <span class="period">Monthly goals</span>
+  </header>
 
-	<section class="overview" aria-label="Monthly budget summary">
-		<div><span class="summary-label">Monthly budget</span><strong>R 24,000</strong><small>Across 5 categories</small></div>
-		<div><span class="summary-label">Spent so far</span><strong>R 18,420</strong><small>77% of your total budget</small></div>
-		<div><span class="summary-label">Available</span><strong class="available">R 5,580</strong><small>16 days remaining</small></div>
-		<div class="overall-progress"><div class="progress-heading"><span>Overall progress</span><strong>77%</strong></div><progress value="77" max="100" aria-label="Overall budget used: 77 percent"></progress><small>On track for this month</small></div>
-	</section>
+  @if (loading()) {
+    <p role="status" aria-live="polite">Loading budget goals...</p>
+  }
 
-	<section class="goals-heading"><div><h2>Category budgets</h2><p>Track each spending limit against your actual activity.</p></div><span>5 categories</span></section>
+  @if (error(); as message) {
+    <div class="error-message" role="alert">
+      <p>{{ message }}</p>
+      <button type="button" (click)="loadGoals()" [disabled]="loading()">Retry</button>
+    </div>
+  }
 
-	<section class="goal-list" aria-label="Category budget goals">
-		<article class="goal-row"><div class="goal-icon groceries">G</div><div class="goal-name"><strong>Groceries</strong><small>Food and household essentials</small></div><div class="goal-progress"><div class="progress-heading"><span>R 5,240 spent</span><strong>87%</strong></div><progress class="green-progress" value="87" max="100" aria-label="Groceries budget used: 87 percent"></progress><small>R 760 remaining</small></div><div class="goal-total"><strong>R 6,000</strong><small>Monthly limit</small></div></article>
-		<article class="goal-row"><div class="goal-icon transport">T</div><div class="goal-name"><strong>Transport</strong><small>Fuel, public transit and rides</small></div><div class="goal-progress"><div class="progress-heading"><span>R 3,120 spent</span><strong>62%</strong></div><progress class="blue-progress" value="62" max="100" aria-label="Transport budget used: 62 percent"></progress><small>R 1,880 remaining</small></div><div class="goal-total"><strong>R 5,000</strong><small>Monthly limit</small></div></article>
-		<article class="goal-row"><div class="goal-icon dining">D</div><div class="goal-name"><strong>Dining</strong><small>Restaurants and coffee</small></div><div class="goal-progress"><div class="progress-heading"><span>R 2,100 spent</span><strong>70%</strong></div><progress class="amber-progress" value="70" max="100" aria-label="Dining budget used: 70 percent"></progress><small>R 900 remaining</small></div><div class="goal-total"><strong>R 3,000</strong><small>Monthly limit</small></div></article>
-		<article class="goal-row"><div class="goal-icon home">H</div><div class="goal-name"><strong>Home &amp; bills</strong><small>Utilities and household costs</small></div><div class="goal-progress"><div class="progress-heading"><span>R 4,560 spent</span><strong>76%</strong></div><progress class="blue-progress" value="76" max="100" aria-label="Home and bills budget used: 76 percent"></progress><small>R 1,440 remaining</small></div><div class="goal-total"><strong>R 6,000</strong><small>Monthly limit</small></div></article>
-		<article class="goal-row"><div class="goal-icon personal">P</div><div class="goal-name"><strong>Personal</strong><small>Shopping and entertainment</small></div><div class="goal-progress"><div class="progress-heading"><span>R 3,400 spent</span><strong>85%</strong></div><progress class="amber-progress" value="85" max="100" aria-label="Personal budget used: 85 percent"></progress><small>R 600 remaining</small></div><div class="goal-total"><strong>R 4,000</strong><small>Monthly limit</small></div></article>
-	</section>
+  @if (data(); as goalsData) {
+    <section class="overview" aria-label="Monthly budget summary">
+      <div>
+        <span class="summary-label">Monthly budget</span>
+        <strong>R {{ totalBudget() | number:'1.2-2':'en-ZA' }}</strong>
+        <small>Across {{ goalsData.goals.length }} categories</small>
+      </div>
+      <div>
+        <span class="summary-label">Spent so far</span>
+        <strong>R {{ totalSpent() | number:'1.2-2':'en-ZA' }}</strong>
+        <small>{{ overallPercentage() | number:'1.0-0' }}% of your total budget</small>
+      </div>
+      <div>
+        <span class="summary-label">Available</span>
+        <strong class="available">R {{ totalBudget() - totalSpent() | number:'1.2-2':'en-ZA' }}</strong>
+        <small>{{ daysRemaining() }} days remaining</small>
+      </div>
+      <div class="overall-progress">
+        <div class="progress-heading">
+          <span>Overall progress</span>
+          <strong>{{ overallPercentage() | number:'1.0-0' }}%</strong>
+        </div>
+        <progress [value]="progressValue(overallPercentage())" max="100" [attr.aria-label]="'Overall budget used: ' + (overallPercentage() | number:'1.0-0') + ' percent'"></progress>
+        <small>{{ overallStatus() }}</small>
+      </div>
+    </section>
+
+    <section class="goals-heading">
+      <div><h2>Category budgets</h2><p>Track each spending limit against your actual activity.</p></div>
+      <span>{{ goalsData.goals.length }} categories</span>
+    </section>
+
+    <section class="goal-list" aria-label="Category budget goals">
+      @for (goal of goalsData.goals; track goal.id) {
+        <article class="goal-row">
+          <div class="goal-icon" [style.backgroundColor]="goal.status === 'exceeded' ? '#fcece9' : goal.status === 'warning' ? '#fff4df' : '#eaf1ff'">
+            {{ goal.category.charAt(0) }}
+          </div>
+          <div class="goal-name">
+            <strong>{{ goal.category }}</strong>
+            <small>{{ goal.status.replace('_', ' ') }}</small>
+          </div>
+          <div class="goal-progress">
+            <div class="progress-heading">
+              <span>R {{ goal.currentSpent | number:'1.2-2':'en-ZA' }} spent</span>
+              <strong>{{ goal.percentageUsed | number:'1.0-0' }}%</strong>
+            </div>
+            <progress [class.warning-progress]="goal.status === 'warning'" [class.exceeded-progress]="goal.status === 'exceeded'" [value]="progressValue(goal.percentageUsed)" max="100" [attr.aria-label]="goal.category + ' budget used: ' + (goal.percentageUsed | number:'1.0-0') + ' percent'"></progress>
+            <small>R {{ goal.monthlyBudget - goal.currentSpent | number:'1.2-2':'en-ZA' }} remaining</small>
+          </div>
+          <div class="goal-total">
+            <strong>R {{ goal.monthlyBudget | number:'1.2-2':'en-ZA' }}</strong>
+            <small>Monthly limit</small>
+          </div>
+        </article>
+      } @empty {
+        <p class="empty-message">No budget goals have been set up.</p>
+      }
+    </section>
+  }
 </section>

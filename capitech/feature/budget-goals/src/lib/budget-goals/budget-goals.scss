@@ -35,6 +35,8 @@ progress::-moz-progress-bar { border-radius: 8px; background: #315edb; }
 .green-progress::-webkit-progress-value { background: #22a77a; }.green-progress::-moz-progress-bar { background: #22a77a; }
 .blue-progress::-webkit-progress-value { background: #3478e5; }.blue-progress::-moz-progress-bar { background: #3478e5; }
 .amber-progress::-webkit-progress-value { background: #e3a13a; }.amber-progress::-moz-progress-bar { background: #e3a13a; }
+.warning-progress::-webkit-progress-value { background: #e3a13a; }.warning-progress::-moz-progress-bar { background: #e3a13a; }
+.exceeded-progress::-webkit-progress-value { background: #d94e4e; }.exceeded-progress::-moz-progress-bar { background: #d94e4e; }
 
 @media (max-width: 850px) { .goal-row { grid-template-columns: 36px minmax(130px, 1fr) minmax(150px, 1.1fr); }.goal-total { display: none; } }
 @media (max-width: 650px) {
@@ -45,4 +47,3 @@ progress::-moz-progress-bar { border-radius: 8px; background: #315edb; }
 	.goal-progress { grid-column: 2; }
 	.page-heading { align-items: flex-start; }
 }
-

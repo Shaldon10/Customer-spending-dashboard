@@ -1,36 +1,48 @@
 <main class="main-panel">
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">Welcome back</p>
-        <h2>Customer spending overview</h2>
-      </div>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Welcome back</p>
+      <h2>Customer spending overview</h2>
+    </div>
 
-      <div class="topbar-actions">
-        <button class="secondary-btn" type="button">This month</button>
-        <button class="primary-btn" type="button">Export</button>
-      </div>
-    </header>
+    <div class="topbar-actions">
+      <button class="secondary-btn" type="button">Last 30 days</button>
+      <button class="primary-btn" type="button">Export</button>
+    </div>
+  </header>
 
+  @if (loading()) {
+    <p role="status" aria-live="polite">Loading spending overview...</p>
+  }
+
+  @if (error(); as message) {
+    <div role="alert">
+      <p>{{ message }}</p>
+      <button type="button" (click)="loadDashboard()" [disabled]="loading()">Retry</button>
+    </div>
+  }
+
+  @if (data(); as dashboard) {
     <section class="summary-grid" aria-label="Summary cards">
       <article class="stat-card accent">
         <span>Total spent</span>
-        <strong>R 42,580</strong>
-        <small>+8.4% vs last month</small>
+        <strong>R {{ dashboard.summary.totalSpent | number:'1.2-2':'en-ZA' }}</strong>
+        <small>{{ dashboard.summary.comparedToPrevious?.spentChange }}% vs previous period</small>
       </article>
       <article class="stat-card">
         <span>Transactions</span>
-        <strong>1,284</strong>
-        <small>+12 this week</small>
+        <strong>{{ dashboard.summary.transactionCount | number:'1.0-0':'en-ZA' }}</strong>
+        <small>{{ dashboard.summary.period }} period</small>
       </article>
       <article class="stat-card">
         <span>Avg. ticket</span>
-        <strong>R 1,240</strong>
-        <small>+3.1% increase</small>
+        <strong>R {{ dashboard.summary.averageTransaction | number:'1.2-2':'en-ZA' }}</strong>
+        <small>Average transaction</small>
       </article>
       <article class="stat-card">
         <span>Top category</span>
-        <strong>Groceries</strong>
-        <small>R 9,420</small>
+        <strong>{{ dashboard.summary.topCategory }}</strong>
+        <small>R {{ dashboard.categories.categories[0]?.amount | number:'1.2-2':'en-ZA' }}</small>
       </article>
     </section>
 
@@ -41,22 +53,17 @@
             <p class="eyebrow">Performance</p>
             <h3>Spending trend</h3>
           </div>
-          <button class="ghost-btn" type="button">12M</button>
+          <span class="mini-label">{{ dashboard.trends.trends.length }} months</span>
         </div>
 
-        <div class="chart-bars" aria-hidden="true">
-          <span style="height: 34%"></span>
-          <span style="height: 52%"></span>
-          <span style="height: 46%"></span>
-          <span style="height: 65%"></span>
-          <span style="height: 57%"></span>
-          <span style="height: 80%"></span>
-          <span style="height: 70%"></span>
-          <span style="height: 92%"></span>
-          <span style="height: 78%"></span>
-          <span style="height: 88%"></span>
-          <span style="height: 62%"></span>
-          <span style="height: 100%"></span>
+        <div class="chart-bars" aria-label="Monthly spending trend">
+          @for (trend of dashboard.trends.trends; track trend.month) {
+            <span
+              [style.height.%]="trendBarHeight(trend.totalSpent)"
+              [title]="formatMonth(trend.month) + ': R ' + (trend.totalSpent | number:'1.2-2':'en-ZA')"
+              [attr.aria-label]="formatMonth(trend.month) + ': R ' + (trend.totalSpent | number:'1.2-2':'en-ZA')"
+            ></span>
+          }
         </div>
       </article>
 
@@ -69,22 +76,15 @@
         </div>
 
         <ul class="category-list">
-          <li>
-            <span class="category-meta"><i class="dot dot-red"></i> Groceries</span>
-            <strong>38%</strong>
-          </li>
-          <li>
-            <span class="category-meta"><i class="dot dot-blue"></i> Transport</span>
-            <strong>21%</strong>
-          </li>
-          <li>
-            <span class="category-meta"><i class="dot dot-gold"></i> Dining</span>
-            <strong>18%</strong>
-          </li>
-          <li>
-            <span class="category-meta"><i class="dot dot-green"></i> Utilities</span>
-            <strong>13%</strong>
-          </li>
+          @for (category of dashboard.categories.categories; track category.name) {
+            <li>
+              <span class="category-meta">
+                <i class="dot" [style.backgroundColor]="category.color"></i>
+                {{ category.name }}
+              </span>
+              <strong>{{ category.percentage }}%</strong>
+            </li>
+          }
         </ul>
       </article>
     </section>
@@ -95,7 +95,7 @@
           <p class="eyebrow">Recent activity</p>
           <h3>Transactions</h3>
         </div>
-        <button class="ghost-btn" type="button">View all</button>
+        <a class="ghost-btn" routerLink="/transactions">View all</a>
       </div>
 
       <table>
@@ -108,31 +108,18 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>Pick n Pay</td>
-            <td>Groceries</td>
-            <td>12 Sep 2026</td>
-            <td class="amount">-R 845.20</td>
-          </tr>
-          <tr>
-            <td>Uber</td>
-            <td>Transport</td>
-            <td>11 Sep 2026</td>
-            <td class="amount">-R 230.00</td>
-          </tr>
-          <tr>
-            <td>Netflix</td>
-            <td>Entertainment</td>
-            <td>09 Sep 2026</td>
-            <td class="amount">-R 169.00</td>
-          </tr>
-          <tr>
-            <td>Salary Deposit</td>
-            <td>Income</td>
-            <td>08 Sep 2026</td>
-            <td class="amount positive">+R 18,400.00</td>
-          </tr>
+          @for (transaction of dashboard.transactions.transactions; track transaction.id) {
+            <tr>
+              <td>{{ transaction.merchant }}</td>
+              <td>{{ transaction.category }}</td>
+              <td>{{ formatDate(transaction.date) }}</td>
+              <td class="amount">− R {{ transaction.amount | number:'1.2-2':'en-ZA' }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="4">No transactions found.</td></tr>
+          }
         </tbody>
       </table>
     </section>
+  }
 </main>
