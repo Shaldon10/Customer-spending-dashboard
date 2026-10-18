@@ -15,88 +15,47 @@
   @if (error(); as message) {
     <div class="error-message" role="alert">
       <p>{{ message }}</p>
-      <button type="button" (click)="loadTransactions()" [disabled]="loading()">Retry</button>
+      <button type="button" (click)="retry()" [disabled]="loading()">Retry</button>
     </div>
   }
 
   @if (data(); as transactionData) {
     <section class="metrics" aria-label="Transaction summary">
       <article class="metric">
-        <span>Matching transactions</span>
-        <strong>{{ transactionData.transactions.pagination.total | number:'1.0-0':'en-ZA' }}</strong>
-        <small>For the selected filters</small>
+        <span>Transactions</span>
+        <strong>{{ transactionData.transactionCount | number:'1.0-0':'en-ZA' }}</strong>
+        <small>{{ transactionData.period }} period</small>
       </article>
       <article class="metric">
         <span>Total spending</span>
-        <strong>R {{ transactionData.summary.totalSpent | number:'1.2-2':'en-ZA' }}</strong>
-        <small>{{ transactionData.summary.period }} period</small>
+        <strong>R {{ transactionData.totalSpent | number:'1.2-2':'en-ZA' }}</strong>
+        <small>{{ transactionData.period }} period</small>
       </article>
       <article class="metric">
         <span>Average transaction</span>
-        <strong>R {{ transactionData.summary.averageTransaction | number:'1.2-2':'en-ZA' }}</strong>
-        <small>{{ transactionData.summary.transactionCount }} transactions</small>
+        <strong>R {{ transactionData.averageTransaction | number:'1.2-2':'en-ZA' }}</strong>
+        <small>{{ transactionData.transactionCount }} transactions</small>
       </article>
     </section>
 
     <section class="list-panel">
       <div class="list-heading">
         <div><h2>Recent transactions</h2><p>Filter and sort account activity</p></div>
-        <span class="result-count">{{ transactionData.transactions.pagination.total }} entries</span>
-      </div>
-      <div class="filters" aria-label="Transaction filters">
-        <label>
-          Category
-          <select [value]="category()" (change)="onCategoryChange($event)">
-            <option value="">All categories</option>
-            @for (option of transactionData.filters.categories; track option.name) {
-              <option [value]="option.name">{{ option.name }}</option>
-            }
-          </select>
-        </label>
-        <label>
-          Sort by
-          <select [value]="sortBy()" (change)="onSortChange($event)">
-            <option value="date_desc">Newest first</option>
-            <option value="date_asc">Oldest first</option>
-            <option value="amount_desc">Highest amount</option>
-            <option value="amount_asc">Lowest amount</option>
-          </select>
-        </label>
-        <label>
-          From
-          <input type="date" [value]="startDate()" (change)="onStartDateChange($event)">
-        </label>
-        <label>
-          To
-          <input type="date" [value]="endDate()" (change)="onEndDateChange($event)">
-        </label>
-        <button type="button" (click)="applyDateRange()" [disabled]="loading()">Apply dates</button>
       </div>
       <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Merchant</th><th>Category</th><th>Date</th><th>Payment method</th><th class="numeric">Amount</th></tr>
-          </thead>
-          <tbody>
-            @for (transaction of transactionData.transactions.transactions; track transaction.id) {
-              <tr>
-                <td><strong>{{ transaction.merchant }}</strong><small>{{ transaction.description }}</small></td>
-                <td>{{ transaction.category }}</td>
-                <td>{{ formatDate(transaction.date) }}</td>
-                <td>{{ transaction.paymentMethod }}</td>
-                <td class="numeric amount">− R {{ transaction.amount | number:'1.2-2':'en-ZA' }}</td>
-              </tr>
-            } @empty {
-              <tr><td colspan="5">No transactions match these filters.</td></tr>
-            }
-          </tbody>
-        </table>
+        <ag-grid-angular
+          class="transactions-grid"
+          [theme]="theme"
+          [columnDefs]="columnDefs"
+          [defaultColDef]="defaultColDef"
+          [rowModelType]="rowModelType"
+          [pagination]="pagination"
+          [paginationPageSize]="paginationPageSize"
+          [cacheBlockSize]="cacheBlockSize"
+          [maxConcurrentDatasourceRequests]="maxConcurrentDatasourceRequests"
+          (gridReady)="onGridReady($event)"
+        ></ag-grid-angular>
       </div>
-      <nav class="pagination" aria-label="Transaction pages">
-        <button type="button" (click)="previousPage()" [disabled]="offset() === 0 || loading()">Previous</button>
-        <span>Showing {{ transactionData.transactions.pagination.total === 0 ? 0 : transactionData.transactions.pagination.offset + 1 }}–{{ transactionData.transactions.pagination.offset + transactionData.transactions.transactions.length }} of {{ transactionData.transactions.pagination.total }}</span>
-        <button type="button" (click)="nextPage()" [disabled]="!transactionData.transactions.pagination.hasMore || loading()">Next</button>
-      </nav>
     </section>
   }
 </section>

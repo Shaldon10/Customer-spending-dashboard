@@ -15,25 +15,9 @@ h1 { margin: 0; font-size: 1.65rem; font-weight: 650; }
 .list-panel { overflow: hidden; }
 .list-heading { padding: 1rem 1.2rem; border-bottom: 1px solid #e9edf3; }
 .list-heading h2 { margin: 0; font-size: 1rem; }
-.table-wrap { overflow-x: auto; }
-.filters { display: flex; flex-wrap: wrap; align-items: end; gap: 0.75rem; padding: 1rem 1.2rem; border-bottom: 1px solid #e9edf3; }
-.filters label { display: grid; gap: 0.3rem; color: #64758b; font-size: 0.7rem; }
-.filters select, .filters input, .filters button, .pagination button { min-height: 34px; padding: 0.35rem 0.55rem; border: 1px solid #d8e0ea; border-radius: 4px; background: #fff; color: #26384f; font: inherit; font-size: 0.75rem; }
-.filters button, .pagination button { cursor: pointer; }
-.filters button:disabled, .pagination button:disabled { cursor: default; opacity: 0.55; }
-table { width: 100%; border-collapse: collapse; white-space: nowrap; }
-th, td { padding: 0.85rem 1.2rem; border-bottom: 1px solid #edf0f4; text-align: left; font-size: 0.82rem; }
-th { color: #64758b; font-size: 0.68rem; font-weight: 600; text-transform: uppercase; }
-tbody tr:last-child td { border-bottom: 0; }
-td strong, td small { display: block; }
-td small { margin-top: 0.2rem; color: #8a97a8; font-size: 0.7rem; }
-.numeric { text-align: right; }
-.amount { font-weight: 600; }
-.income { color: #16845a; }
-.status { display: inline-block; padding: 0.24rem 0.45rem; border-radius: 4px; font-size: 0.68rem; }
-.complete { color: #16724f; background: #eaf6ef; }
-.received { color: #3155ae; background: #edf2ff; }
-.pagination { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.8rem 1.2rem; border-top: 1px solid #e9edf3; color: #64758b; font-size: 0.75rem; }
+.table-wrap { width: 100%; overflow: hidden; }
+.transactions-grid { display: block; width: 100%; height: 420px; }
+.numeric { text-align: right; font-weight: 600; }
 
 @media (max-width: 700px) {
 	.page { padding: 1.1rem; }

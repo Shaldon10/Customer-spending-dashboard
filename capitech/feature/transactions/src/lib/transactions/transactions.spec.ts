@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { customerSpendingFacade } from '@capitech/data-access';
+import type { IGetRowsParams } from 'ag-grid-community';
 import { Transactions } from './transactions';
 
 describe('Transactions', () => {
@@ -14,10 +15,6 @@ describe('Transactions', () => {
     }],
     pagination: { total: 1, limit: 20, offset: 0, hasMore: false },
   };
-  const filters = {
-    categories: [{ name: 'Groceries', color: '#FF6B6B', icon: 'shopping-cart' }],
-    dateRangePresets: [{ label: 'Last 30 days', value: '30d' }],
-  };
   const summary = {
     period: '30d' as const,
     totalSpent: 4250.75,
@@ -28,7 +25,6 @@ describe('Transactions', () => {
 
   beforeEach(async () => {
     jest.spyOn(customerSpendingFacade, 'getTransactions').mockResolvedValue(transactions);
-    jest.spyOn(customerSpendingFacade, 'getFilters').mockResolvedValue(filters);
     jest.spyOn(customerSpendingFacade, 'getSpendingSummary').mockResolvedValue(summary);
 
     await TestBed.configureTestingModule({
@@ -44,21 +40,38 @@ describe('Transactions', () => {
     expect(component).toBeTruthy();
   });
 
-  it('loads and displays transactions and available category filters', async () => {
-    await component.loadTransactions();
-    fixture.detectChanges();
+  it('loads filtered rows through the infinite-row datasource', async () => {
+    const successCallback = jest.fn();
+    const failCallback = jest.fn();
+    const params = {
+      startRow: 0,
+      endRow: 20,
+      filterModel: {
+        category: { filterType: 'text', type: 'equals', filter: 'Groceries' },
+        date: {
+          filterType: 'date',
+          type: 'inRange',
+          dateFrom: '2024-09-01 00:00:00',
+          dateTo: '2024-09-30 00:00:00',
+        },
+      },
+      sortModel: [{ colId: 'amount', sort: 'asc' }],
+      successCallback,
+      failCallback,
+    } as unknown as IGetRowsParams;
+
+    await component.loadRows(params);
 
     expect(customerSpendingFacade.getTransactions).toHaveBeenCalledWith('12345', {
       limit: 20,
       offset: 0,
-      category: undefined,
-      startDate: undefined,
-      endDate: undefined,
-      sortBy: 'date_desc',
+      category: 'Groceries',
+      startDate: '2024-09-01',
+      endDate: '2024-09-30',
+      sortBy: 'amount_asc',
     });
-    expect(customerSpendingFacade.getFilters).toHaveBeenCalledWith('12345');
-    expect(fixture.nativeElement.textContent).toContain('Pick n Pay');
-    expect(fixture.nativeElement.textContent).toContain('Weekly groceries');
+    expect(successCallback).toHaveBeenCalledWith(transactions.transactions, 1);
+    expect(failCallback).not.toHaveBeenCalled();
   });
 
   afterEach(() => {
