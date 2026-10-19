@@ -9,15 +9,6 @@ const categoryMetadata = [
   { name: 'Utilities', color: '#85C1E9', icon: 'zap' },
 ];
 
-const trends = [
-  { month: '2024-01', totalSpent: 3890.25, transactionCount: 42, averageTransaction: 92.62 },
-  { month: '2024-02', totalSpent: 4150.8, transactionCount: 38, averageTransaction: 109.23 },
-  { month: '2024-03', totalSpent: 3750.6, transactionCount: 45, averageTransaction: 83.35 },
-  { month: '2024-04', totalSpent: 4200.45, transactionCount: 39, averageTransaction: 107.7 },
-  { month: '2024-05', totalSpent: 3980.3, transactionCount: 44, averageTransaction: 90.46 },
-  { month: '2024-06', totalSpent: 4250.75, transactionCount: 47, averageTransaction: 90.44 },
-];
-
 const transactions = [
   { merchant: 'Pick n Pay', category: 'Groceries', amount: 245.8, description: 'Weekly groceries', paymentMethod: 'Credit Card', daysAgo: 1 },
   { merchant: 'Netflix', category: 'Entertainment', amount: 199, description: 'Monthly subscription', paymentMethod: 'Debit Order', daysAgo: 2 },
@@ -110,6 +101,39 @@ function getTransactionsInRange(startDate: string, endDate: string) {
     const transactionDate = transaction.date.slice(0, 10);
     return transactionDate >= startDate && transactionDate <= endDate;
   });
+}
+
+function summarizeMonthlyTrends(startDate: string, endDate: string) {
+  const monthlyTotals = new Map<string, { totalSpent: number; transactionCount: number }>();
+  const month = new Date(`${startDate.slice(0, 7)}-01T00:00:00Z`);
+  const lastMonth = endDate.slice(0, 7);
+
+  while (utcDateString(month).slice(0, 7) <= lastMonth) {
+    monthlyTotals.set(utcDateString(month).slice(0, 7), {
+      totalSpent: 0,
+      transactionCount: 0,
+    });
+    month.setUTCMonth(month.getUTCMonth() + 1);
+  }
+
+  for (const transaction of getTransactionsInRange(startDate, endDate)) {
+    const monthKey = transaction.date.slice(0, 7);
+    const totals = monthlyTotals.get(monthKey);
+    if (totals) {
+      totals.totalSpent += transaction.amount;
+      totals.transactionCount += 1;
+    }
+  }
+
+  return [...monthlyTotals.entries()].map(([monthKey, totals]) => ({
+    month: monthKey,
+    totalSpent: Math.round(totals.totalSpent * 100) / 100,
+    transactionCount: totals.transactionCount,
+    averageTransaction:
+      totals.transactionCount > 0
+        ? Math.round((totals.totalSpent / totals.transactionCount) * 100) / 100
+        : 0,
+  }));
 }
 
 function summarizeTransactions(
@@ -254,7 +278,16 @@ mockApiRouter.get('/customers/:customerId/spending/categories', (req, res) => {
 
 mockApiRouter.get('/customers/:customerId/spending/trends', (req, res) => {
   const months = Math.min(24, Math.max(1, queryNumber(req.query['months'], 12)));
-  res.json({ trends: trends.slice(-months) });
+  const period = queryString(req.query['period']);
+  const range = period
+    ? dateRange(normalizePeriod(period))
+    : (() => {
+        const end = new Date();
+        end.setUTCHours(0, 0, 0, 0);
+        const start = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth() - months + 1, 1));
+        return { startDate: utcDateString(start), endDate: utcDateString(end) };
+      })();
+  res.json({ trends: summarizeMonthlyTrends(range.startDate, range.endDate) });
 });
 
 mockApiRouter.get('/customers/:customerId/transactions', (req, res) => {

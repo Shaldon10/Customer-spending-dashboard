@@ -1,6 +1,10 @@
 import type { AxiosInstance } from 'axios';
 
-import { CustomerSpendingFacade } from './customer-spending.facade';
+import {
+  CustomerSpendingFacade,
+  isSpendingPeriod,
+  spendingPeriodDateRange,
+} from './customer-spending.facade';
 
 describe('CustomerSpendingFacade', () => {
   let client: jest.Mocked<Pick<AxiosInstance, 'get'>>;
@@ -11,6 +15,15 @@ describe('CustomerSpendingFacade', () => {
       get: jest.fn(),
     } as unknown as jest.Mocked<Pick<AxiosInstance, 'get'>>;
     facade = new CustomerSpendingFacade(client as unknown as AxiosInstance);
+  });
+
+  it('identifies the supported spending periods and calculates UTC ranges', () => {
+    expect(isSpendingPeriod('90d')).toBe(true);
+    expect(isSpendingPeriod('custom')).toBe(false);
+    expect(spendingPeriodDateRange('7d', new Date('2024-03-01T18:30:00Z'))).toEqual({
+      startDate: '2024-02-24',
+      endDate: '2024-03-01',
+    });
   });
 
   it('loads the customer profile from the expected endpoint', async () => {

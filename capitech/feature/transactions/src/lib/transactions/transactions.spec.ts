@@ -1,11 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { customerSpendingFacade } from '@capitech/data-access';
+import { customerSpendingFacade, spendingPeriodDateRange } from '@capitech/data-access';
 import type { IGetRowsParams } from 'ag-grid-community';
 import { Transactions } from './transactions';
 
 describe('Transactions', () => {
   let component: Transactions;
   let fixture: ComponentFixture<Transactions>;
+  const periodPreferenceKey = 'customer-spending-transactions-period:12345';
 
   const transactions = {
     transactions: [{
@@ -22,10 +23,26 @@ describe('Transactions', () => {
     averageTransaction: 90.44,
     topCategory: 'Groceries',
   };
+  const filters = {
+    categories: [{ name: 'Groceries', color: '#FF6B6B', icon: 'shopping-cart' }],
+    dateRangePresets: [
+      { label: 'Last 7 days', value: '7d' },
+      { label: 'Last 30 days', value: '30d' },
+      { label: 'Last 90 days', value: '90d' },
+      { label: 'Last year', value: '1y' },
+    ],
+  };
 
   beforeEach(async () => {
+    localStorage.removeItem(periodPreferenceKey);
     jest.spyOn(customerSpendingFacade, 'getTransactions').mockResolvedValue(transactions);
-    jest.spyOn(customerSpendingFacade, 'getSpendingSummary').mockResolvedValue(summary);
+    jest.spyOn(customerSpendingFacade, 'getSpendingSummary').mockImplementation(
+      async (_customerId, params) => ({
+        ...summary,
+        period: params.period ?? '30d',
+      }),
+    );
+    jest.spyOn(customerSpendingFacade, 'getFilters').mockResolvedValue(filters);
 
     await TestBed.configureTestingModule({
       imports: [Transactions]
@@ -41,6 +58,8 @@ describe('Transactions', () => {
   });
 
   it('loads filtered rows through the infinite-row datasource', async () => {
+    const periodRange = spendingPeriodDateRange('90d');
+    component.selectedPeriod.set('90d');
     const successCallback = jest.fn();
     const failCallback = jest.fn();
     const params = {
@@ -51,8 +70,8 @@ describe('Transactions', () => {
         date: {
           filterType: 'date',
           type: 'inRange',
-          dateFrom: '2024-09-01 00:00:00',
-          dateTo: '2024-09-30 00:00:00',
+          dateFrom: `${periodRange.startDate} 00:00:00`,
+          dateTo: `${periodRange.endDate} 00:00:00`,
         },
       },
       sortModel: [{ colId: 'amount', sort: 'asc' }],
@@ -66,15 +85,59 @@ describe('Transactions', () => {
       limit: 20,
       offset: 0,
       category: 'Groceries',
-      startDate: '2024-09-01',
-      endDate: '2024-09-30',
+      startDate: periodRange.startDate,
+      endDate: periodRange.endDate,
       sortBy: 'amount_asc',
     });
     expect(successCallback).toHaveBeenCalledWith(transactions.transactions, 1);
     expect(failCallback).not.toHaveBeenCalled();
   });
 
+  it('loads the summary for the selected period', async () => {
+    await component.loadSummary();
+    fixture.detectChanges();
+
+    expect(customerSpendingFacade.getSpendingSummary).toHaveBeenCalledWith('12345', {
+      period: '30d',
+    });
+    expect(customerSpendingFacade.getFilters).toHaveBeenCalledWith('12345');
+    expect(fixture.nativeElement.textContent).toContain('Last 30 days');
+  });
+
+  it('updates the summary and transaction period when changed', async () => {
+    await component.loadSummary();
+    fixture.detectChanges();
+    const select = fixture.nativeElement.querySelector('select') as HTMLSelectElement;
+    select.value = '7d';
+    select.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+
+    expect(component.selectedPeriod()).toBe('7d');
+    expect(customerSpendingFacade.getSpendingSummary).toHaveBeenLastCalledWith('12345', {
+      period: '7d',
+    });
+    expect(localStorage.getItem(periodPreferenceKey)).toBe('7d');
+  });
+
+  it('restores the selected period before loading the transaction summary', async () => {
+    fixture.destroy();
+    localStorage.setItem(periodPreferenceKey, '7d');
+
+    fixture = TestBed.createComponent(Transactions);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    await component.loadSummary();
+    fixture.detectChanges();
+
+    expect(component.selectedPeriod()).toBe('7d');
+    expect(customerSpendingFacade.getSpendingSummary).toHaveBeenLastCalledWith('12345', {
+      period: '7d',
+    });
+    expect(fixture.nativeElement.textContent).toContain('7d period');
+  });
+
   afterEach(() => {
+    localStorage.removeItem(periodPreferenceKey);
     jest.restoreAllMocks();
   });
 });

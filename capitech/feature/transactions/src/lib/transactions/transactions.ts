@@ -1,6 +1,11 @@
 import { DecimalPipe, isPlatformBrowser } from '@angular/common';
-import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
-import { customerSpendingFacade } from '@capitech/data-access';
+import { Component, ElementRef, OnInit, PLATFORM_ID, ViewChild, inject, signal } from '@angular/core';
+import {
+  customerSpendingFacade,
+  isSpendingPeriod,
+  spendingPeriodDateRange,
+  type SpendingPeriod,
+} from '@capitech/data-access';
 import { AgGridAngular } from 'ag-grid-angular';
 import {
   AllCommunityModule,
@@ -41,7 +46,11 @@ ModuleRegistry.registerModules([AllCommunityModule, InfiniteRowModelModule]);
 })
 export class Transactions implements OnInit {
   readonly customerId = '12345';
+  readonly selectedPeriod = signal<SpendingPeriod>('30d');
   readonly data = signal<TransactionsSummary | null>(null);
+  readonly filters = signal<
+    Awaited<ReturnType<typeof customerSpendingFacade.getFilters>> | null
+  >(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly theme = themeQuartz;
@@ -119,8 +128,16 @@ export class Transactions implements OnInit {
   private activeRequests = 0;
   private gridApi: GridApi<TransactionRow> | null = null;
 
+  @ViewChild('periodSelect')
+  set periodSelect(select: ElementRef<HTMLSelectElement> | undefined) {
+    if (select) {
+      select.nativeElement.value = this.selectedPeriod();
+    }
+  }
+
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
+      this.restorePeriodPreference();
       void this.loadSummary();
     }
   }
@@ -130,7 +147,14 @@ export class Transactions implements OnInit {
     this.error.set(null);
 
     try {
-      this.data.set(await customerSpendingFacade.getSpendingSummary(this.customerId));
+      const [summary, filters] = await Promise.all([
+        customerSpendingFacade.getSpendingSummary(this.customerId, {
+          period: this.selectedPeriod(),
+        }),
+        customerSpendingFacade.getFilters(this.customerId),
+      ]);
+      this.data.set(summary);
+      this.filters.set(filters);
     } catch {
       this.error.set('Transaction summary could not be loaded. Please try again.');
     } finally {
@@ -139,6 +163,20 @@ export class Transactions implements OnInit {
   }
 
   retry(): void {
+    void this.loadSummary();
+    this.gridApi?.refreshInfiniteCache();
+  }
+
+  onPeriodChange(event: Event): void {
+    if (!(event.target instanceof HTMLSelectElement)) {
+      return;
+    }
+    const value = event.target.value;
+    if (!isSpendingPeriod(value)) {
+      return;
+    }
+    this.selectedPeriod.set(value);
+    this.savePeriodPreference(value);
     void this.loadSummary();
     this.gridApi?.refreshInfiniteCache();
   }
@@ -169,13 +207,22 @@ export class Transactions implements OnInit {
         categoryFilter?.filterType === 'text' && categoryFilter.type === 'equals'
           ? categoryFilter.filter ?? ''
           : '';
-      const { startDate, endDate } = this.dateFilterRange(dateFilter);
+      const periodRange = spendingPeriodDateRange(this.selectedPeriod());
+      const filterRange = this.dateFilterRange(dateFilter);
+      const startDate =
+        filterRange.startDate > periodRange.startDate
+          ? filterRange.startDate
+          : periodRange.startDate;
+      const endDate =
+        filterRange.endDate && filterRange.endDate < periodRange.endDate
+          ? filterRange.endDate
+          : periodRange.endDate;
       const response = await customerSpendingFacade.getTransactions(this.customerId, {
         limit: params.endRow - params.startRow,
         offset: params.startRow,
         category: category || undefined,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
+        startDate,
+        endDate,
         sortBy: this.sortFromModel(params.sortModel),
       });
       params.successCallback(response.transactions, response.pagination.total);
@@ -193,6 +240,29 @@ export class Transactions implements OnInit {
       dateStyle: 'medium',
       timeZone: 'UTC',
     }).format(new Date(date));
+  }
+
+  private restorePeriodPreference(): void {
+    try {
+      const savedPeriod = localStorage.getItem(this.periodPreferenceKey());
+      if (savedPeriod && isSpendingPeriod(savedPeriod)) {
+        this.selectedPeriod.set(savedPeriod);
+      }
+    } catch (error) {
+      console.error('Unable to restore the transactions period preference.', error);
+    }
+  }
+
+  private savePeriodPreference(period: SpendingPeriod): void {
+    try {
+      localStorage.setItem(this.periodPreferenceKey(), period);
+    } catch (error) {
+      console.error('Unable to save the transactions period preference.', error);
+    }
+  }
+
+  private periodPreferenceKey(): string {
+    return `customer-spending-transactions-period:${this.customerId}`;
   }
 
   private dateFilterRange(

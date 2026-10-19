@@ -103,6 +103,12 @@ paths:
             type: integer
             default: 12
             maximum: 24
+        - in: query
+          name: period
+          required: false
+          schema:
+            type: string
+            enum: [7d, 30d, 90d, 1y]
       responses:
         '200':
           description: Monthly spending trends

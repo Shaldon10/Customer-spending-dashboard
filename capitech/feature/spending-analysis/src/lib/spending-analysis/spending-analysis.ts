@@ -1,22 +1,16 @@
 import { DecimalPipe, isPlatformBrowser } from '@angular/common';
-import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, PLATFORM_ID, ViewChild, inject, signal } from '@angular/core';
 import {
   customerSpendingFacade,
-  type GetSpendingSummaryParams,
+  isSpendingPeriod,
+  type SpendingPeriod,
 } from '@capitech/data-access';
 
-type SpendingPeriod = NonNullable<GetSpendingSummaryParams['period']>;
 type AnalysisData = {
   summary: Awaited<ReturnType<typeof customerSpendingFacade.getSpendingSummary>>;
   categories: Awaited<ReturnType<typeof customerSpendingFacade.getSpendingCategories>>;
   filters: Awaited<ReturnType<typeof customerSpendingFacade.getFilters>>;
 };
-
-const spendingPeriods: readonly SpendingPeriod[] = ['7d', '30d', '90d', '1y'];
-
-function isSpendingPeriod(value: string): value is SpendingPeriod {
-  return spendingPeriods.some((period) => period === value);
-}
 
 @Component({
   selector: 'lib-spending-analysis',
@@ -33,8 +27,16 @@ export class SpendingAnalysis implements OnInit {
 
   private readonly platformId = inject(PLATFORM_ID);
 
+  @ViewChild('periodSelect')
+  set periodSelect(select: ElementRef<HTMLSelectElement> | undefined) {
+    if (select) {
+      select.nativeElement.value = this.selectedPeriod();
+    }
+  }
+
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
+      this.restorePeriodPreference();
       void this.loadAnalysis();
     }
   }
@@ -70,7 +72,31 @@ export class SpendingAnalysis implements OnInit {
       return;
     }
     this.selectedPeriod.set(value);
+    this.savePeriodPreference(value);
     void this.loadAnalysis();
+  }
+
+  private restorePeriodPreference(): void {
+    try {
+      const savedPeriod = localStorage.getItem(this.periodPreferenceKey());
+      if (savedPeriod && isSpendingPeriod(savedPeriod)) {
+        this.selectedPeriod.set(savedPeriod);
+      }
+    } catch (error) {
+      console.error('Unable to restore the spending analysis period preference.', error);
+    }
+  }
+
+  private savePeriodPreference(period: SpendingPeriod): void {
+    try {
+      localStorage.setItem(this.periodPreferenceKey(), period);
+    } catch (error) {
+      console.error('Unable to save the spending analysis period preference.', error);
+    }
+  }
+
+  private periodPreferenceKey(): string {
+    return `customer-spending-analysis-period:${this.customerId}`;
   }
 
   previousPeriodSpend(): number | null {

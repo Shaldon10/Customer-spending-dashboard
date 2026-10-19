@@ -5,7 +5,16 @@
       <h1>Transactions</h1>
       <p class="subheading">Review recent account activity and spending.</p>
     </div>
-    <span class="period">Last 30 days</span>
+    @if (filters(); as transactionFilters) {
+      <label class="period-filter">
+        Period
+        <select #periodSelect name="transactions-period" autocomplete="off" [value]="selectedPeriod()" (change)="onPeriodChange($event)">
+          @for (preset of transactionFilters.dateRangePresets; track preset.value) {
+            <option [value]="preset.value">{{ preset.label }}</option>
+          }
+        </select>
+      </label>
+    }
   </header>
 
   @if (loading()) {

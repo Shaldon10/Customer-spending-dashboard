@@ -45,9 +45,9 @@ jobs:
             npm install
           fi
 
-      - name: Run Jest tests
+      - name: Run all Jest tests with coverage
         working-directory: capitech
-        run: npx nx test capitech --ci
+        run: npx nx run-many -t test -c ci
 
       - name: Build Angular application
         working-directory: capitech

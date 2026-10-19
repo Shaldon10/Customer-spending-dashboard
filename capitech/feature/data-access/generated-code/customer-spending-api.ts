@@ -137,6 +137,7 @@ export interface paths {
             parameters: {
                 query?: {
                     months?: number;
+                    period?: "7d" | "30d" | "90d" | "1y";
                 };
                 header?: never;
                 path: {
