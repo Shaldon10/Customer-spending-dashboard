@@ -39,6 +39,7 @@ export class CustomerDashboard implements OnInit {
   readonly error = signal<string | null>(null);
 
   private readonly platformId = inject(PLATFORM_ID);
+  private loadSequence = 0;
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
@@ -47,6 +48,7 @@ export class CustomerDashboard implements OnInit {
   }
 
   async loadDashboard(): Promise<void> {
+    const requestSequence = ++this.loadSequence;
     this.loading.set(true);
     this.error.set(null);
 
@@ -56,18 +58,24 @@ export class CustomerDashboard implements OnInit {
       const [summary, categories, trends, transactions, filters] = await Promise.all([
         customerSpendingFacade.getSpendingSummary(this.customerId, { period }),
         customerSpendingFacade.getSpendingCategories(this.customerId, { period }),
-        customerSpendingFacade.getSpendingTrends(this.customerId),
+        customerSpendingFacade.getSpendingTrends(this.customerId, { period }),
         customerSpendingFacade.getTransactions(this.customerId, {
           limit: 4,
           ...dateRange,
         }),
         customerSpendingFacade.getFilters(this.customerId),
       ]);
-      this.data.set({ summary, categories, trends, transactions, filters });
+      if (requestSequence === this.loadSequence) {
+        this.data.set({ summary, categories, trends, transactions, filters });
+      }
     } catch {
-      this.error.set('Dashboard data could not be loaded. Please try again.');
+      if (requestSequence === this.loadSequence) {
+        this.error.set('Dashboard data could not be loaded. Please try again.');
+      }
     } finally {
-      this.loading.set(false);
+      if (requestSequence === this.loadSequence) {
+        this.loading.set(false);
+      }
     }
   }
 

@@ -45,6 +45,7 @@ export type GetSpendingCategoriesParams = {
 
 export type GetSpendingTrendsParams = {
   months?: number;
+  period?: SpendingPeriod;
 };
 
 export type GetTransactionsParams = {

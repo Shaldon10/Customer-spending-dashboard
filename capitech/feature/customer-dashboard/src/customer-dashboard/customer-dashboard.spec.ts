@@ -73,7 +73,7 @@ describe('CustomerDashboard', () => {
 
     expect(customerSpendingFacade.getSpendingSummary).toHaveBeenCalledWith('12345', { period: '30d' });
     expect(customerSpendingFacade.getSpendingCategories).toHaveBeenCalledWith('12345', { period: '30d' });
-    expect(customerSpendingFacade.getSpendingTrends).toHaveBeenCalledWith('12345');
+    expect(customerSpendingFacade.getSpendingTrends).toHaveBeenCalledWith('12345', { period: '30d' });
     expect(customerSpendingFacade.getTransactions).toHaveBeenCalledWith('12345', {
       limit: 4,
       ...spendingPeriodDateRange('30d'),
@@ -109,6 +109,7 @@ describe('CustomerDashboard', () => {
 
     expect(component.selectedPeriod()).toBe('7d');
     expect(customerSpendingFacade.getSpendingSummary).toHaveBeenLastCalledWith('12345', { period: '7d' });
+    expect(customerSpendingFacade.getSpendingTrends).toHaveBeenLastCalledWith('12345', { period: '7d' });
     expect(customerSpendingFacade.getTransactions).toHaveBeenLastCalledWith('12345', {
       limit: 4,
       ...spendingPeriodDateRange('7d'),
