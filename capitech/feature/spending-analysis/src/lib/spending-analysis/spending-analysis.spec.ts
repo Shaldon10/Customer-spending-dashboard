@@ -59,6 +59,7 @@ describe('SpendingAnalysis', () => {
     expect(customerSpendingFacade.getFilters).toHaveBeenCalledWith('12345');
     expect(fixture.nativeElement.textContent).toContain('4,250.75');
     expect(fixture.nativeElement.textContent).toContain('Groceries');
+    expect(fixture.nativeElement.textContent).toContain('+13%');
   });
 
   afterEach(() => {

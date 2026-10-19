@@ -6,6 +6,37 @@ export type GetSpendingSummaryParams = {
   period?: components['schemas']['SpendingSummary']['period'];
 };
 
+export type SpendingPeriod = NonNullable<GetSpendingSummaryParams['period']>;
+
+const spendingPeriodDays: Record<SpendingPeriod, number> = {
+  '7d': 7,
+  '30d': 30,
+  '90d': 90,
+  '1y': 365,
+};
+
+export function isSpendingPeriod(value: string): value is SpendingPeriod {
+  return Object.prototype.hasOwnProperty.call(spendingPeriodDays, value);
+}
+
+export function spendingPeriodDateRange(
+  period: SpendingPeriod,
+  referenceDate = new Date(),
+): { startDate: string; endDate: string } {
+  const end = new Date(Date.UTC(
+    referenceDate.getUTCFullYear(),
+    referenceDate.getUTCMonth(),
+    referenceDate.getUTCDate(),
+  ));
+  const start = new Date(end);
+  start.setUTCDate(start.getUTCDate() - spendingPeriodDays[period] + 1);
+
+  return {
+    startDate: start.toISOString().slice(0, 10),
+    endDate: end.toISOString().slice(0, 10),
+  };
+}
+
 export type GetSpendingCategoriesParams = {
   period?: components['schemas']['SpendingSummary']['period'];
   startDate?: string;

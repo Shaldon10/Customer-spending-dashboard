@@ -6,7 +6,7 @@
       <p class="subheading">Understand where your money goes each month.</p>
     </div>
     @if (data(); as analysis) {
-      <label class="period">
+      <label class="period-filter">
         Period
         <select [value]="selectedPeriod()" (change)="onPeriodChange($event)">
           @for (preset of analysis.filters.dateRangePresets; track preset.value) {
@@ -45,7 +45,7 @@
         @if (analysis.summary.comparedToPrevious; as comparison) {
           @if (comparison.spentChange !== undefined) {
             <strong [class.positive]="comparison.spentChange < 0">
-              {{ comparison.spentChange > 0 ? '+' : '' }}{{ comparison.spentChange }}%
+              {{ comparison.spentChange > 0 ? '+' : '' }}{{ comparison.spentChange | number:'1.0-0':'en-ZA' }}%
             </strong>
             <small>Spending change</small>
           } @else {

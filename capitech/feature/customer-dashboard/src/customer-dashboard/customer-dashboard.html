@@ -6,7 +6,16 @@
     </div>
 
     <div class="topbar-actions">
-      <button class="secondary-btn" type="button">Last 30 days</button>
+      @if (data(); as dashboard) {
+        <label class="period-filter">
+          Period
+          <select [value]="selectedPeriod()" (change)="onPeriodChange($event)">
+            @for (preset of dashboard.filters.dateRangePresets; track preset.value) {
+              <option [value]="preset.value">{{ preset.label }}</option>
+            }
+          </select>
+        </label>
+      }
       <button class="primary-btn" type="button">Export</button>
     </div>
   </header>
@@ -27,7 +36,10 @@
       <article class="stat-card accent">
         <span>Total spent</span>
         <strong>R {{ dashboard.summary.totalSpent | number:'1.2-2':'en-ZA' }}</strong>
-        <small>{{ dashboard.summary.comparedToPrevious?.spentChange }}% vs previous period</small>
+        <small>
+          {{ dashboard.summary.comparedToPrevious?.spentChange | number:'1.0-0':'en-ZA' }}%
+          vs previous period
+        </small>
       </article>
       <article class="stat-card">
         <span>Transactions</span>
@@ -52,19 +64,56 @@
           <div>
             <p class="eyebrow">Performance</p>
             <h3>Spending trend</h3>
+            <p class="chart-caption">Monthly spending in ZAR</p>
           </div>
           <span class="mini-label">{{ dashboard.trends.trends.length }} months</span>
         </div>
 
-        <div class="chart-bars" aria-label="Monthly spending trend">
-          @for (trend of dashboard.trends.trends; track trend.month) {
-            <span
-              [style.height.%]="trendBarHeight(trend.totalSpent)"
-              [title]="formatMonth(trend.month) + ': R ' + (trend.totalSpent | number:'1.2-2':'en-ZA')"
-              [attr.aria-label]="formatMonth(trend.month) + ': R ' + (trend.totalSpent | number:'1.2-2':'en-ZA')"
-            ></span>
-          }
-        </div>
+        @if (dashboard.trends.trends.length > 0) {
+          <figure class="trend-chart" role="img" [attr.aria-label]="trendChartDescription()">
+            <div class="chart-y-axis" aria-hidden="true">
+              @for (tick of trendAxisTicks(); track tick) {
+                <span>{{ formatCompactCurrency(tick) }}</span>
+              }
+            </div>
+            <div class="chart-content">
+              <div class="chart-scroll">
+                <div
+                  class="chart-bars"
+                  [style.minWidth.rem]="dashboard.trends.trends.length * 3.25"
+                  [style.gridTemplateColumns]="'repeat(' + dashboard.trends.trends.length + ', minmax(0, 1fr))'"
+                  aria-hidden="true"
+                >
+                  @for (trend of dashboard.trends.trends; track trend.month) {
+                    <div class="chart-bar-column">
+                      <span
+                        class="chart-value"
+                        [style.bottom.%]="trendBarHeight(trend.totalSpent) + 1"
+                      >{{ formatCompactCurrency(trend.totalSpent) }}</span>
+                      <span
+                        class="chart-bar"
+                        [style.height.%]="trendBarHeight(trend.totalSpent)"
+                        [title]="formatMonth(trend.month) + ': R ' + (trend.totalSpent | number:'1.2-2':'en-ZA')"
+                      ></span>
+                    </div>
+                  }
+                </div>
+                <div
+                  class="chart-x-axis"
+                  [style.minWidth.rem]="dashboard.trends.trends.length * 3.25"
+                  [style.gridTemplateColumns]="'repeat(' + dashboard.trends.trends.length + ', minmax(0, 1fr))'"
+                  aria-hidden="true"
+                >
+                  @for (trend of dashboard.trends.trends; track trend.month) {
+                    <span>{{ formatMonth(trend.month) }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+          </figure>
+        } @else {
+          <p class="chart-empty">No monthly spending data available.</p>
+        }
       </article>
 
       <article class="panel side-panel">

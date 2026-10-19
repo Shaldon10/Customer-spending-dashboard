@@ -2,21 +2,15 @@ import { DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import {
   customerSpendingFacade,
-  type GetSpendingSummaryParams,
+  isSpendingPeriod,
+  type SpendingPeriod,
 } from '@capitech/data-access';
 
-type SpendingPeriod = NonNullable<GetSpendingSummaryParams['period']>;
 type AnalysisData = {
   summary: Awaited<ReturnType<typeof customerSpendingFacade.getSpendingSummary>>;
   categories: Awaited<ReturnType<typeof customerSpendingFacade.getSpendingCategories>>;
   filters: Awaited<ReturnType<typeof customerSpendingFacade.getFilters>>;
 };
-
-const spendingPeriods: readonly SpendingPeriod[] = ['7d', '30d', '90d', '1y'];
-
-function isSpendingPeriod(value: string): value is SpendingPeriod {
-  return spendingPeriods.some((period) => period === value);
-}
 
 @Component({
   selector: 'lib-spending-analysis',
