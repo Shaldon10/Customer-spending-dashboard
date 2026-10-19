@@ -32,7 +32,7 @@
         },
         "outputMode": "server",
         "security": {
-          "allowedHosts": []
+          "allowedHosts": ["*"]
         }
       },
       "configurations": {
