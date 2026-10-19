@@ -1,5 +1,10 @@
-<div class="app-shell">
-	<aside class="sidebar" aria-label="Main navigation">
+<div class="app-shell" [class.sidebar-hidden]="sidebarHidden()">
+	<aside
+		class="sidebar"
+		id="main-navigation"
+		aria-label="Main navigation"
+		[attr.inert]="sidebarHidden() ? '' : null"
+	>
 		<a class="brand" routerLink="/" aria-label="Capitech Insights home">
 			<span class="brand-mark" aria-hidden="true">C</span>
 			<span>
@@ -30,6 +35,21 @@
 	</aside>
 
 	<main class="page-content">
+		<div class="menu-controls">
+			<button
+				class="menu-toggle"
+				type="button"
+				(click)="toggleSidebar()"
+				[attr.aria-expanded]="!sidebarHidden()"
+				[attr.aria-label]="sidebarHidden() ? 'Show menu' : 'Hide menu'"
+				[attr.title]="sidebarHidden() ? 'Show menu' : 'Hide menu'"
+				aria-controls="main-navigation"
+			>
+				<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+					<path d="M4 6h16M4 12h16M4 18h16"></path>
+				</svg>
+			</button>
+		</div>
 		<router-outlet></router-outlet>
 	</main>
 </div>

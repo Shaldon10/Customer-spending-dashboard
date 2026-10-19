@@ -13,6 +13,7 @@ type CustomerProfileData = Awaited<ReturnType<typeof customerSpendingFacade.getC
 })
 export class App implements OnInit {
   readonly customerId = '12345';
+  readonly sidebarHidden = signal(false);
   readonly profile = signal<CustomerProfileData | null>(null);
   readonly loading = signal(true);
   readonly initials = computed(() => {
@@ -41,6 +42,10 @@ export class App implements OnInit {
     if (isPlatformBrowser(this.platformId)) {
       void this.loadProfile();
     }
+  }
+
+  toggleSidebar(): void {
+    this.sidebarHidden.update((hidden) => !hidden);
   }
 
   private async loadProfile(): Promise<void> {

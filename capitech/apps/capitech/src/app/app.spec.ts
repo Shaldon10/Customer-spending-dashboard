@@ -32,6 +32,28 @@ describe('App', () => {
     expect(compiled.querySelector('router-outlet')).toBeTruthy();
   });
 
+  it('hides and shows the navigation menu when toggled', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const shell = fixture.nativeElement.querySelector('.app-shell') as HTMLElement;
+    const toggle = fixture.nativeElement.querySelector('.menu-toggle') as HTMLButtonElement;
+
+    expect(toggle.getAttribute('aria-label')).toBe('Hide menu');
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    toggle.click();
+    fixture.detectChanges();
+    expect(shell.classList).toContain('sidebar-hidden');
+    expect(toggle.getAttribute('aria-label')).toBe('Show menu');
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+
+    toggle.click();
+    fixture.detectChanges();
+    expect(shell.classList).not.toContain('sidebar-hidden');
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+  });
+
   afterEach(() => {
     jest.restoreAllMocks();
   });
