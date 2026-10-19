@@ -1,1 +1,23 @@
 /* You can add global styles to this file, and also import other style files */
+
+.page-content router-outlet + * {
+	animation: page-enter 240ms ease-out both;
+}
+
+@keyframes page-enter {
+	from {
+		transform: translateY(0.35rem);
+		opacity: 0;
+	}
+
+	to {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.page-content router-outlet + * {
+		animation: none;
+	}
+}
