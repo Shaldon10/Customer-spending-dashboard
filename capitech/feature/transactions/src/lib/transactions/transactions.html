@@ -8,7 +8,7 @@
     @if (filters(); as transactionFilters) {
       <label class="period-filter">
         Period
-        <select [value]="selectedPeriod()" (change)="onPeriodChange($event)">
+        <select #periodSelect name="transactions-period" autocomplete="off" [value]="selectedPeriod()" (change)="onPeriodChange($event)">
           @for (preset of transactionFilters.dateRangePresets; track preset.value) {
             <option [value]="preset.value">{{ preset.label }}</option>
           }

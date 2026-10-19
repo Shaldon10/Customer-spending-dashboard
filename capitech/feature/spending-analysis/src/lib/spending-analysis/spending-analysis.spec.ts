@@ -5,6 +5,7 @@ import { SpendingAnalysis } from './spending-analysis';
 describe('SpendingAnalysis', () => {
   let component: SpendingAnalysis;
   let fixture: ComponentFixture<SpendingAnalysis>;
+  const periodPreferenceKey = 'customer-spending-analysis-period:12345';
 
   const summary = {
     period: '30d' as const,
@@ -33,7 +34,13 @@ describe('SpendingAnalysis', () => {
   };
 
   beforeEach(async () => {
-    jest.spyOn(customerSpendingFacade, 'getSpendingSummary').mockResolvedValue(summary);
+    localStorage.removeItem(periodPreferenceKey);
+    jest.spyOn(customerSpendingFacade, 'getSpendingSummary').mockImplementation(
+      async (_customerId, params) => ({
+        ...summary,
+        period: params.period ?? '30d',
+      }),
+    );
     jest.spyOn(customerSpendingFacade, 'getSpendingCategories').mockResolvedValue(categories);
     jest.spyOn(customerSpendingFacade, 'getFilters').mockResolvedValue(filters);
 
@@ -60,9 +67,45 @@ describe('SpendingAnalysis', () => {
     expect(fixture.nativeElement.textContent).toContain('4,250.75');
     expect(fixture.nativeElement.textContent).toContain('Groceries');
     expect(fixture.nativeElement.textContent).toContain('+13%');
+    expect(fixture.nativeElement.textContent).toContain(
+      'Spending is up 13% compared with the previous period.',
+    );
+  });
+
+  it('updates the selected period and saves the preference', async () => {
+    await component.loadAnalysis();
+    fixture.detectChanges();
+
+    const select = fixture.nativeElement.querySelector('select') as HTMLSelectElement;
+    select.value = '7d';
+    select.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(component.selectedPeriod()).toBe('7d');
+    expect(customerSpendingFacade.getSpendingSummary).toHaveBeenLastCalledWith('12345', { period: '7d' });
+    expect(localStorage.getItem(periodPreferenceKey)).toBe('7d');
+    expect(fixture.nativeElement.textContent).toContain('7d period');
+  });
+
+  it('restores the selected period before loading the analysis', async () => {
+    fixture.destroy();
+    localStorage.setItem(periodPreferenceKey, '7d');
+
+    fixture = TestBed.createComponent(SpendingAnalysis);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    await component.loadAnalysis();
+    fixture.detectChanges();
+
+    expect(component.selectedPeriod()).toBe('7d');
+    expect(customerSpendingFacade.getSpendingSummary).toHaveBeenLastCalledWith('12345', { period: '7d' });
+    expect(customerSpendingFacade.getSpendingCategories).toHaveBeenLastCalledWith('12345', { period: '7d' });
+    expect(fixture.nativeElement.textContent).toContain('7d period');
   });
 
   afterEach(() => {
+    localStorage.removeItem(periodPreferenceKey);
     jest.restoreAllMocks();
   });
 });

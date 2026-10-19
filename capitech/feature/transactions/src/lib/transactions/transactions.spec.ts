@@ -6,6 +6,7 @@ import { Transactions } from './transactions';
 describe('Transactions', () => {
   let component: Transactions;
   let fixture: ComponentFixture<Transactions>;
+  const periodPreferenceKey = 'customer-spending-transactions-period:12345';
 
   const transactions = {
     transactions: [{
@@ -33,8 +34,14 @@ describe('Transactions', () => {
   };
 
   beforeEach(async () => {
+    localStorage.removeItem(periodPreferenceKey);
     jest.spyOn(customerSpendingFacade, 'getTransactions').mockResolvedValue(transactions);
-    jest.spyOn(customerSpendingFacade, 'getSpendingSummary').mockResolvedValue(summary);
+    jest.spyOn(customerSpendingFacade, 'getSpendingSummary').mockImplementation(
+      async (_customerId, params) => ({
+        ...summary,
+        period: params.period ?? '30d',
+      }),
+    );
     jest.spyOn(customerSpendingFacade, 'getFilters').mockResolvedValue(filters);
 
     await TestBed.configureTestingModule({
@@ -109,9 +116,28 @@ describe('Transactions', () => {
     expect(customerSpendingFacade.getSpendingSummary).toHaveBeenLastCalledWith('12345', {
       period: '7d',
     });
+    expect(localStorage.getItem(periodPreferenceKey)).toBe('7d');
+  });
+
+  it('restores the selected period before loading the transaction summary', async () => {
+    fixture.destroy();
+    localStorage.setItem(periodPreferenceKey, '7d');
+
+    fixture = TestBed.createComponent(Transactions);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    await component.loadSummary();
+    fixture.detectChanges();
+
+    expect(component.selectedPeriod()).toBe('7d');
+    expect(customerSpendingFacade.getSpendingSummary).toHaveBeenLastCalledWith('12345', {
+      period: '7d',
+    });
+    expect(fixture.nativeElement.textContent).toContain('7d period');
   });
 
   afterEach(() => {
+    localStorage.removeItem(periodPreferenceKey);
     jest.restoreAllMocks();
   });
 });

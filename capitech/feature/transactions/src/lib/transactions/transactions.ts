@@ -1,5 +1,5 @@
 import { DecimalPipe, isPlatformBrowser } from '@angular/common';
-import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, PLATFORM_ID, ViewChild, inject, signal } from '@angular/core';
 import {
   customerSpendingFacade,
   isSpendingPeriod,
@@ -128,8 +128,16 @@ export class Transactions implements OnInit {
   private activeRequests = 0;
   private gridApi: GridApi<TransactionRow> | null = null;
 
+  @ViewChild('periodSelect')
+  set periodSelect(select: ElementRef<HTMLSelectElement> | undefined) {
+    if (select) {
+      select.nativeElement.value = this.selectedPeriod();
+    }
+  }
+
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
+      this.restorePeriodPreference();
       void this.loadSummary();
     }
   }
@@ -168,6 +176,7 @@ export class Transactions implements OnInit {
       return;
     }
     this.selectedPeriod.set(value);
+    this.savePeriodPreference(value);
     void this.loadSummary();
     this.gridApi?.refreshInfiniteCache();
   }
@@ -231,6 +240,29 @@ export class Transactions implements OnInit {
       dateStyle: 'medium',
       timeZone: 'UTC',
     }).format(new Date(date));
+  }
+
+  private restorePeriodPreference(): void {
+    try {
+      const savedPeriod = localStorage.getItem(this.periodPreferenceKey());
+      if (savedPeriod && isSpendingPeriod(savedPeriod)) {
+        this.selectedPeriod.set(savedPeriod);
+      }
+    } catch (error) {
+      console.error('Unable to restore the transactions period preference.', error);
+    }
+  }
+
+  private savePeriodPreference(period: SpendingPeriod): void {
+    try {
+      localStorage.setItem(this.periodPreferenceKey(), period);
+    } catch (error) {
+      console.error('Unable to save the transactions period preference.', error);
+    }
+  }
+
+  private periodPreferenceKey(): string {
+    return `customer-spending-transactions-period:${this.customerId}`;
   }
 
   private dateFilterRange(

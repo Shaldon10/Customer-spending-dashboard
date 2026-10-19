@@ -6,6 +6,7 @@ import { CustomerDashboard } from './customer-dashboard';
 describe('CustomerDashboard', () => {
   let component: CustomerDashboard;
   let fixture: ComponentFixture<CustomerDashboard>;
+  const periodPreferenceKey = 'customer-spending-dashboard-period:12345';
 
   const summary = {
     period: '30d' as const,
@@ -47,7 +48,22 @@ describe('CustomerDashboard', () => {
   };
 
   beforeEach(async () => {
-    jest.spyOn(customerSpendingFacade, 'getSpendingSummary').mockResolvedValue(summary);
+    localStorage.removeItem(periodPreferenceKey);
+    jest.spyOn(customerSpendingFacade, 'getCustomerProfile').mockResolvedValue({
+      customerId: '12345',
+      name: 'John Doe',
+      email: 'john.doe@email.com',
+      joinDate: '2023-01-15',
+      accountType: 'premium',
+      totalSpent: 15420.5,
+      currency: 'ZAR',
+    });
+    jest.spyOn(customerSpendingFacade, 'getSpendingSummary').mockImplementation(
+      async (_customerId, params) => ({
+        ...summary,
+        period: params.period ?? '30d',
+      }),
+    );
     jest.spyOn(customerSpendingFacade, 'getSpendingCategories').mockResolvedValue(categories);
     jest.spyOn(customerSpendingFacade, 'getSpendingTrends').mockResolvedValue(trends);
     jest.spyOn(customerSpendingFacade, 'getTransactions').mockResolvedValue(transactions);
@@ -79,8 +95,10 @@ describe('CustomerDashboard', () => {
       ...spendingPeriodDateRange('30d'),
     });
     expect(customerSpendingFacade.getFilters).toHaveBeenCalledWith('12345');
+    expect(customerSpendingFacade.getCustomerProfile).toHaveBeenCalledWith('12345');
     expect(fixture.nativeElement.textContent).toContain('4,250.75');
     expect(fixture.nativeElement.textContent).toContain('13%');
+    expect(fixture.nativeElement.textContent).toContain('Welcome back, John Doe');
     expect(fixture.nativeElement.textContent).toContain('Pick n Pay');
   });
 
@@ -91,7 +109,7 @@ describe('CustomerDashboard', () => {
     const chart = fixture.nativeElement.querySelector('.trend-chart') as HTMLElement;
     expect(chart.getAttribute('aria-label')).toContain('Jun 24');
     expect(chart.getAttribute('aria-label')).toContain('R 4,250.75');
-    expect(fixture.nativeElement.textContent).toContain('Monthly spending in ZAR');
+    expect(fixture.nativeElement.textContent).toContain('Spending in selected period by month (ZAR)');
     expect(fixture.nativeElement.textContent).toContain('R 5K');
     expect(fixture.nativeElement.textContent).toContain('Jun 24');
     expect(fixture.nativeElement.textContent).toContain('R 4.3K');
@@ -114,9 +132,63 @@ describe('CustomerDashboard', () => {
       limit: 4,
       ...spendingPeriodDateRange('7d'),
     });
+    expect(localStorage.getItem(periodPreferenceKey)).toBe('7d');
+  });
+
+  it('restores the selected period before loading the dashboard', async () => {
+    fixture.destroy();
+    localStorage.setItem(periodPreferenceKey, '7d');
+
+    fixture = TestBed.createComponent(CustomerDashboard);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    await component.loadDashboard();
+    fixture.detectChanges();
+
+    expect(component.selectedPeriod()).toBe('7d');
+    expect(customerSpendingFacade.getSpendingSummary).toHaveBeenLastCalledWith('12345', { period: '7d' });
+    expect(fixture.nativeElement.textContent).toContain('7d period');
+  });
+
+  it('hides the previous period summary while the selected period is loading', async () => {
+    await component.loadDashboard();
+    fixture.detectChanges();
+
+    let resolveSevenDaySummary!: (
+      value: Awaited<ReturnType<typeof customerSpendingFacade.getSpendingSummary>>,
+    ) => void;
+    jest.spyOn(customerSpendingFacade, 'getSpendingSummary').mockImplementation(
+      (_customerId, params) =>
+        params.period === '7d'
+          ? new Promise((resolve) => {
+              resolveSevenDaySummary = resolve;
+            })
+          : Promise.resolve(summary),
+    );
+
+    component.selectedPeriod.set('7d');
+    const reload = component.loadDashboard();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.summary-grid')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Loading spending overview...');
+
+    resolveSevenDaySummary({
+      ...summary,
+      period: '7d',
+      totalSpent: 1544.25,
+      transactionCount: 5,
+    });
+    await reload;
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('7d period');
+    expect(fixture.nativeElement.textContent).toContain('1,544.25');
+    expect(fixture.nativeElement.textContent).not.toContain('30d period');
   });
 
   afterEach(() => {
+    localStorage.removeItem(periodPreferenceKey);
     jest.restoreAllMocks();
   });
 });

@@ -1,5 +1,5 @@
 import { DecimalPipe, isPlatformBrowser } from '@angular/common';
-import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, PLATFORM_ID, ViewChild, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   customerSpendingFacade,
@@ -9,6 +9,7 @@ import {
 } from '@capitech/data-access';
 
 type DashboardData = {
+  profile: Awaited<ReturnType<typeof customerSpendingFacade.getCustomerProfile>>;
   summary: Awaited<ReturnType<typeof customerSpendingFacade.getSpendingSummary>>;
   categories: Awaited<ReturnType<typeof customerSpendingFacade.getSpendingCategories>>;
   trends: Awaited<ReturnType<typeof customerSpendingFacade.getSpendingTrends>>;
@@ -41,8 +42,16 @@ export class CustomerDashboard implements OnInit {
   private readonly platformId = inject(PLATFORM_ID);
   private loadSequence = 0;
 
+  @ViewChild('periodSelect')
+  set periodSelect(select: ElementRef<HTMLSelectElement> | undefined) {
+    if (select) {
+      select.nativeElement.value = this.selectedPeriod();
+    }
+  }
+
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
+      this.restorePeriodPreference();
       void this.loadDashboard();
     }
   }
@@ -55,7 +64,8 @@ export class CustomerDashboard implements OnInit {
     try {
       const period = this.selectedPeriod();
       const dateRange = spendingPeriodDateRange(period);
-      const [summary, categories, trends, transactions, filters] = await Promise.all([
+      const [profile, summary, categories, trends, transactions, filters] = await Promise.all([
+        customerSpendingFacade.getCustomerProfile(this.customerId),
         customerSpendingFacade.getSpendingSummary(this.customerId, { period }),
         customerSpendingFacade.getSpendingCategories(this.customerId, { period }),
         customerSpendingFacade.getSpendingTrends(this.customerId, { period }),
@@ -66,7 +76,7 @@ export class CustomerDashboard implements OnInit {
         customerSpendingFacade.getFilters(this.customerId),
       ]);
       if (requestSequence === this.loadSequence) {
-        this.data.set({ summary, categories, trends, transactions, filters });
+        this.data.set({ profile, summary, categories, trends, transactions, filters });
       }
     } catch {
       if (requestSequence === this.loadSequence) {
@@ -88,7 +98,31 @@ export class CustomerDashboard implements OnInit {
       return;
     }
     this.selectedPeriod.set(value);
+    this.savePeriodPreference(value);
     void this.loadDashboard();
+  }
+
+  private restorePeriodPreference(): void {
+    try {
+      const savedPeriod = localStorage.getItem(this.periodPreferenceKey());
+      if (savedPeriod && isSpendingPeriod(savedPeriod)) {
+        this.selectedPeriod.set(savedPeriod);
+      }
+    } catch (error) {
+      console.error('Unable to restore the dashboard period preference.', error);
+    }
+  }
+
+  private savePeriodPreference(period: SpendingPeriod): void {
+    try {
+      localStorage.setItem(this.periodPreferenceKey(), period);
+    } catch (error) {
+      console.error('Unable to save the dashboard period preference.', error);
+    }
+  }
+
+  private periodPreferenceKey(): string {
+    return `customer-spending-dashboard-period:${this.customerId}`;
   }
 
   trendBarHeight(amount: number): number {

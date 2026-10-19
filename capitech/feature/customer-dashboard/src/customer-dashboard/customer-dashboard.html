@@ -1,7 +1,13 @@
 <main class="main-panel">
   <header class="topbar">
     <div>
-      <p class="eyebrow">Welcome back</p>
+      <p class="eyebrow">
+        @if (data(); as dashboard) {
+          Welcome back, {{ dashboard.profile.name }}
+        } @else {
+          Welcome back
+        }
+      </p>
       <h2>Customer spending overview</h2>
     </div>
 
@@ -9,7 +15,7 @@
       @if (data(); as dashboard) {
         <label class="period-filter">
           Period
-          <select [value]="selectedPeriod()" (change)="onPeriodChange($event)">
+          <select #periodSelect name="customer-dashboard-period" autocomplete="off" [value]="selectedPeriod()" (change)="onPeriodChange($event)">
             @for (preset of dashboard.filters.dateRangePresets; track preset.value) {
               <option [value]="preset.value">{{ preset.label }}</option>
             }
@@ -32,143 +38,145 @@
   }
 
   @if (data(); as dashboard) {
-    <section class="summary-grid" aria-label="Summary cards">
-      <article class="stat-card accent">
-        <span>Total spent</span>
-        <strong>R {{ dashboard.summary.totalSpent | number:'1.2-2':'en-ZA' }}</strong>
-        <small>
-          {{ dashboard.summary.comparedToPrevious?.spentChange | number:'1.0-0':'en-ZA' }}%
-          vs previous period
-        </small>
-      </article>
-      <article class="stat-card">
-        <span>Transactions</span>
-        <strong>{{ dashboard.summary.transactionCount | number:'1.0-0':'en-ZA' }}</strong>
-        <small>{{ dashboard.summary.period }} period</small>
-      </article>
-      <article class="stat-card">
-        <span>Avg. ticket</span>
-        <strong>R {{ dashboard.summary.averageTransaction | number:'1.2-2':'en-ZA' }}</strong>
-        <small>Average transaction</small>
-      </article>
-      <article class="stat-card">
-        <span>Top category</span>
-        <strong>{{ dashboard.summary.topCategory }}</strong>
-        <small>R {{ dashboard.categories.categories[0]?.amount | number:'1.2-2':'en-ZA' }}</small>
-      </article>
-    </section>
+    @if (!loading() && !error()) {
+      <section class="summary-grid" aria-label="Summary cards">
+        <article class="stat-card accent">
+          <span>Total spent</span>
+          <strong>R {{ dashboard.summary.totalSpent | number:'1.2-2':'en-ZA' }}</strong>
+          <small>
+            {{ dashboard.summary.comparedToPrevious?.spentChange | number:'1.0-0':'en-ZA' }}%
+            vs previous period
+          </small>
+        </article>
+        <article class="stat-card">
+          <span>Transactions</span>
+          <strong>{{ dashboard.summary.transactionCount | number:'1.0-0':'en-ZA' }}</strong>
+          <small>{{ dashboard.summary.period }} period</small>
+        </article>
+        <article class="stat-card">
+          <span>Avg. ticket</span>
+          <strong>R {{ dashboard.summary.averageTransaction | number:'1.2-2':'en-ZA' }}</strong>
+          <small>Average transaction</small>
+        </article>
+        <article class="stat-card">
+          <span>Top category</span>
+          <strong>{{ dashboard.summary.topCategory }}</strong>
+          <small>R {{ dashboard.categories.categories[0]?.amount | number:'1.2-2':'en-ZA' }}</small>
+        </article>
+      </section>
 
-    <section class="content-grid">
-      <article class="panel chart-panel">
-        <div class="panel-header">
-          <div>
-            <p class="eyebrow">Performance</p>
-            <h3>Spending trend</h3>
-            <p class="chart-caption">Spending in selected period by month (ZAR)</p>
-          </div>
-          <span class="mini-label">{{ dashboard.trends.trends.length }} months in period</span>
-        </div>
-
-        @if (dashboard.trends.trends.length > 0) {
-          <figure class="trend-chart" role="img" [attr.aria-label]="trendChartDescription()">
-            <div class="chart-y-axis" aria-hidden="true">
-              @for (tick of trendAxisTicks(); track tick) {
-                <span>{{ formatCompactCurrency(tick) }}</span>
-              }
+      <section class="content-grid">
+        <article class="panel chart-panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Performance</p>
+              <h3>Spending trend</h3>
+              <p class="chart-caption">Spending in selected period by month (ZAR)</p>
             </div>
-            <div class="chart-content">
-              <div class="chart-scroll">
-                <div
-                  class="chart-bars"
-                  [style.minWidth.rem]="dashboard.trends.trends.length * 3.25"
-                  [style.gridTemplateColumns]="'repeat(' + dashboard.trends.trends.length + ', minmax(0, 1fr))'"
-                  aria-hidden="true"
-                >
-                  @for (trend of dashboard.trends.trends; track trend.month) {
-                    <div class="chart-bar-column">
-                      <span
-                        class="chart-value"
-                        [style.bottom.%]="trendBarHeight(trend.totalSpent) + 1"
-                      >{{ formatCompactCurrency(trend.totalSpent) }}</span>
-                      <span
-                        class="chart-bar"
-                        [style.height.%]="trendBarHeight(trend.totalSpent)"
-                        [title]="formatMonth(trend.month) + ': R ' + (trend.totalSpent | number:'1.2-2':'en-ZA')"
-                      ></span>
-                    </div>
-                  }
-                </div>
-                <div
-                  class="chart-x-axis"
-                  [style.minWidth.rem]="dashboard.trends.trends.length * 3.25"
-                  [style.gridTemplateColumns]="'repeat(' + dashboard.trends.trends.length + ', minmax(0, 1fr))'"
-                  aria-hidden="true"
-                >
-                  @for (trend of dashboard.trends.trends; track trend.month) {
-                    <span>{{ formatMonth(trend.month) }}</span>
-                  }
+            <span class="mini-label">{{ dashboard.trends.trends.length }} months in period</span>
+          </div>
+
+          @if (dashboard.trends.trends.length > 0) {
+            <figure class="trend-chart" role="img" [attr.aria-label]="trendChartDescription()">
+              <div class="chart-y-axis" aria-hidden="true">
+                @for (tick of trendAxisTicks(); track tick) {
+                  <span>{{ formatCompactCurrency(tick) }}</span>
+                }
+              </div>
+              <div class="chart-content">
+                <div class="chart-scroll">
+                  <div
+                    class="chart-bars"
+                    [style.minWidth.rem]="dashboard.trends.trends.length * 3.25"
+                    [style.gridTemplateColumns]="'repeat(' + dashboard.trends.trends.length + ', minmax(0, 1fr))'"
+                    aria-hidden="true"
+                  >
+                    @for (trend of dashboard.trends.trends; track trend.month) {
+                      <div class="chart-bar-column">
+                        <span
+                          class="chart-value"
+                          [style.bottom.%]="trendBarHeight(trend.totalSpent) + 1"
+                        >{{ formatCompactCurrency(trend.totalSpent) }}</span>
+                        <span
+                          class="chart-bar"
+                          [style.height.%]="trendBarHeight(trend.totalSpent)"
+                          [title]="formatMonth(trend.month) + ': R ' + (trend.totalSpent | number:'1.2-2':'en-ZA')"
+                        ></span>
+                      </div>
+                    }
+                  </div>
+                  <div
+                    class="chart-x-axis"
+                    [style.minWidth.rem]="dashboard.trends.trends.length * 3.25"
+                    [style.gridTemplateColumns]="'repeat(' + dashboard.trends.trends.length + ', minmax(0, 1fr))'"
+                    aria-hidden="true"
+                  >
+                    @for (trend of dashboard.trends.trends; track trend.month) {
+                      <span>{{ formatMonth(trend.month) }}</span>
+                    }
+                  </div>
                 </div>
               </div>
-            </div>
-          </figure>
-        } @else {
-          <p class="chart-empty">No monthly spending data available.</p>
-        }
-      </article>
+            </figure>
+          } @else {
+            <p class="chart-empty">No monthly spending data available.</p>
+          }
+        </article>
 
-      <article class="panel side-panel">
+        <article class="panel side-panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Breakdown</p>
+              <h3>Categories</h3>
+            </div>
+          </div>
+
+          <ul class="category-list">
+            @for (category of dashboard.categories.categories; track category.name) {
+              <li>
+                <span class="category-meta">
+                  <i class="dot" [style.backgroundColor]="category.color"></i>
+                  {{ category.name }}
+                </span>
+                <strong>{{ category.percentage }}%</strong>
+              </li>
+            }
+          </ul>
+        </article>
+      </section>
+
+      <section class="panel table-panel">
         <div class="panel-header">
           <div>
-            <p class="eyebrow">Breakdown</p>
-            <h3>Categories</h3>
+            <p class="eyebrow">Recent activity</p>
+            <h3>Transactions</h3>
           </div>
+          <a class="ghost-btn" routerLink="/transactions">View all</a>
         </div>
 
-        <ul class="category-list">
-          @for (category of dashboard.categories.categories; track category.name) {
-            <li>
-              <span class="category-meta">
-                <i class="dot" [style.backgroundColor]="category.color"></i>
-                {{ category.name }}
-              </span>
-              <strong>{{ category.percentage }}%</strong>
-            </li>
-          }
-        </ul>
-      </article>
-    </section>
-
-    <section class="panel table-panel">
-      <div class="panel-header">
-        <div>
-          <p class="eyebrow">Recent activity</p>
-          <h3>Transactions</h3>
-        </div>
-        <a class="ghost-btn" routerLink="/transactions">View all</a>
-      </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Merchant</th>
-            <th>Category</th>
-            <th>Date</th>
-            <th>Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (transaction of dashboard.transactions.transactions; track transaction.id) {
+        <table>
+          <thead>
             <tr>
-              <td>{{ transaction.merchant }}</td>
-              <td>{{ transaction.category }}</td>
-              <td>{{ formatDate(transaction.date) }}</td>
-              <td class="amount">− R {{ transaction.amount | number:'1.2-2':'en-ZA' }}</td>
+              <th>Merchant</th>
+              <th>Category</th>
+              <th>Date</th>
+              <th>Amount</th>
             </tr>
-          } @empty {
-            <tr><td colspan="4">No transactions found.</td></tr>
-          }
-        </tbody>
-      </table>
-    </section>
+          </thead>
+          <tbody>
+            @for (transaction of dashboard.transactions.transactions; track transaction.id) {
+              <tr>
+                <td>{{ transaction.merchant }}</td>
+                <td>{{ transaction.category }}</td>
+                <td>{{ formatDate(transaction.date) }}</td>
+                <td class="amount">− R {{ transaction.amount | number:'1.2-2':'en-ZA' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4">No transactions found.</td></tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    }
   }
 </main>
