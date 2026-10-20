@@ -43,6 +43,8 @@ npx nx serve capitech
 
 Open <http://localhost:4200>. The development server serves the Angular application and its SSR/API integration.
 
+The demo sign-in is **admin** / **capitech123**. The mock login endpoint returns the signed-in demo customer's ID, which the dashboard uses for profile and spending requests. The demo login and browser-stored customer ID are not production authentication and do not secure the API or protect real customer data.
+
 ### Build for production
 
 From `capitech`:
@@ -76,6 +78,7 @@ To test one project, replace the project name as needed:
 
 ```sh
 npx nx test capitech
+npx nx test login
 npx nx test customer-dashboard
 npx nx test transactions
 ```
@@ -115,6 +118,7 @@ The repository contains the Dockerfile and this README at its root. The Nx works
     │           └── mock-api.ts      # Sample-data API routes
     ├── feature/
     │   ├── customer-dashboard/      # Main customer dashboard view
+    │   ├── login/                    # Demo login, auth state, and route guard
     │   ├── transactions/            # Transaction list and related UI
     │   ├── spending-analysis/        # Spending summaries and category analysis
     │   ├── budget-goals/             # Budget and goal views

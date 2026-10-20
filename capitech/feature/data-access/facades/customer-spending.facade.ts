@@ -68,6 +68,17 @@ const apiClient: AxiosInstance = axios.create({
 export class CustomerSpendingFacade {
   constructor(private readonly client: AxiosInstance = apiClient) {}
 
+  public async authenticate(
+    username: string,
+    password: string,
+  ): Promise<{ customerId: string | null }> {
+    const { data } = await this.client.post<{ customerId: string | null }>('/auth/login', {
+      username,
+      password,
+    });
+    return data;
+  }
+
   private customerPath(customerId: string, suffix: string): string {
     return `/customers/${encodeURIComponent(customerId)}${suffix}`;
   }

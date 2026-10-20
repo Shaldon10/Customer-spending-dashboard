@@ -1,0 +1,144 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  color: #152338;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+}
+
+.login-page {
+  display: grid;
+  min-height: 100vh;
+  box-sizing: border-box;
+  place-items: center;
+  padding: 1.5rem;
+  background:
+    radial-gradient(ellipse at top left, rgb(85 121 246 / 12%), transparent 45%),
+    #f3f6fb;
+}
+
+.login-card {
+  width: min(100%, 410px);
+  box-sizing: border-box;
+  padding: 2.25rem;
+  border: 1px solid #e1e7f0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 20px 55px rgb(21 35 56 / 9%);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand-mark {
+  display: grid;
+  width: 38px;
+  aspect-ratio: 1;
+  place-items: center;
+  border-radius: 10px;
+  color: #fff;
+  background: #5579f6;
+  font-weight: 700;
+}
+
+.brand-name,
+.brand-caption {
+  display: block;
+}
+
+.brand-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.brand-caption {
+  margin-top: 0.1rem;
+  color: #73819a;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+}
+
+h1 {
+  margin: 2.5rem 0 0.5rem;
+  font-size: 1.7rem;
+}
+
+.intro {
+  margin: 0 0 1.75rem;
+  color: #68758a;
+  font-size: 0.9rem;
+}
+
+form {
+  display: grid;
+  gap: 0.65rem;
+}
+
+label {
+  margin-top: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem 0.8rem;
+  border: 1px solid #d5deeb;
+  border-radius: 7px;
+  color: inherit;
+  background: #fff;
+  font: inherit;
+}
+
+input:focus-visible {
+  border-color: #5579f6;
+  outline: 2px solid rgb(85 121 246 / 20%);
+}
+
+button {
+  margin-top: 0.75rem;
+  padding: 0.8rem;
+  border: 0;
+  border-radius: 7px;
+  color: #fff;
+  background: #315edb;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: #244fc7;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.error {
+  margin: 0.35rem 0 0;
+  color: #b42318;
+  font-size: 0.82rem;
+}
+
+.demo-credentials {
+  margin: 1.5rem 0 0;
+  padding: 0.75rem;
+  border-radius: 6px;
+  color: #52627a;
+  background: #f3f6fb;
+  font-size: 0.76rem;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 1.5rem;
+  }
+}

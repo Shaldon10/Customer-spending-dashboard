@@ -6,6 +6,7 @@ import { App } from './app';
 
 describe('App', () => {
   beforeEach(() => {
+    localStorage.setItem('capitech-demo-customer-id', '12345');
     jest.spyOn(customerSpendingFacade, 'getCustomerProfile').mockResolvedValue({
       customerId: '12345',
       name: 'John Doe',
@@ -55,6 +56,7 @@ describe('App', () => {
   });
 
   afterEach(() => {
+    localStorage.removeItem('capitech-demo-customer-id');
     jest.restoreAllMocks();
   });
 });

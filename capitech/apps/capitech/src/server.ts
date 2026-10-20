@@ -15,6 +15,7 @@ const browserDistFolder = resolve(serverDistFolder, '../browser');
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
+app.use(express.json());
 app.use('/api', mockApiRouter);
 
 /**

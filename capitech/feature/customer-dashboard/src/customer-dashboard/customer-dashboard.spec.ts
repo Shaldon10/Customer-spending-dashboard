@@ -48,6 +48,7 @@ describe('CustomerDashboard', () => {
   };
 
   beforeEach(async () => {
+    localStorage.setItem('capitech-demo-customer-id', '12345');
     localStorage.removeItem(periodPreferenceKey);
     jest.spyOn(customerSpendingFacade, 'getCustomerProfile').mockResolvedValue({
       customerId: '12345',
@@ -188,6 +189,7 @@ describe('CustomerDashboard', () => {
   });
 
   afterEach(() => {
+    localStorage.removeItem('capitech-demo-customer-id');
     localStorage.removeItem(periodPreferenceKey);
     jest.restoreAllMocks();
   });

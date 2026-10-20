@@ -5,6 +5,7 @@ import {
   isSpendingPeriod,
   type SpendingPeriod,
 } from '@capitech/data-access';
+import { AuthService } from '@capitech/login';
 
 type AnalysisData = {
   summary: Awaited<ReturnType<typeof customerSpendingFacade.getSpendingSummary>>;
@@ -19,13 +20,14 @@ type AnalysisData = {
   styleUrl: './spending-analysis.scss',
 })
 export class SpendingAnalysis implements OnInit {
-  readonly customerId = '12345';
+  customerId = '';
   readonly selectedPeriod = signal<SpendingPeriod>('30d');
   readonly data = signal<AnalysisData | null>(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly auth = inject(AuthService);
 
   @ViewChild('periodSelect')
   set periodSelect(select: ElementRef<HTMLSelectElement> | undefined) {
@@ -36,6 +38,12 @@ export class SpendingAnalysis implements OnInit {
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
+      this.customerId = this.auth.getCustomerId() ?? '';
+      if (!this.customerId) {
+        this.error.set('Customer identity is unavailable. Please sign in again.');
+        this.loading.set(false);
+        return;
+      }
       this.restorePeriodPreference();
       void this.loadAnalysis();
     }

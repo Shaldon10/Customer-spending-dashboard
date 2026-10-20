@@ -21,6 +21,7 @@ import {
   type SortModelItem,
   type TextFilterModel,
 } from 'ag-grid-community';
+import { AuthService } from '@capitech/login';
 
 const pageSize = 20;
 const zarCurrency = new Intl.NumberFormat('en-ZA', {
@@ -45,7 +46,7 @@ ModuleRegistry.registerModules([AllCommunityModule, InfiniteRowModelModule]);
   styleUrl: './transactions.scss',
 })
 export class Transactions implements OnInit {
-  readonly customerId = '12345';
+  customerId = '';
   readonly selectedPeriod = signal<SpendingPeriod>('30d');
   readonly data = signal<TransactionsSummary | null>(null);
   readonly filters = signal<
@@ -125,6 +126,7 @@ export class Transactions implements OnInit {
   ];
 
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly auth = inject(AuthService);
   private activeRequests = 0;
   private gridApi: GridApi<TransactionRow> | null = null;
 
@@ -137,6 +139,12 @@ export class Transactions implements OnInit {
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
+      this.customerId = this.auth.getCustomerId() ?? '';
+      if (!this.customerId) {
+        this.error.set('Customer identity is unavailable. Please sign in again.');
+        this.loading.set(false);
+        return;
+      }
       this.restorePeriodPreference();
       void this.loadSummary();
     }

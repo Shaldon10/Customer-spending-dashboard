@@ -7,14 +7,27 @@ import {
 } from './customer-spending.facade';
 
 describe('CustomerSpendingFacade', () => {
-  let client: jest.Mocked<Pick<AxiosInstance, 'get'>>;
+  let client: jest.Mocked<Pick<AxiosInstance, 'get' | 'post'>>;
   let facade: CustomerSpendingFacade;
 
   beforeEach(() => {
     client = {
       get: jest.fn(),
-    } as unknown as jest.Mocked<Pick<AxiosInstance, 'get'>>;
+      post: jest.fn(),
+    } as unknown as jest.Mocked<Pick<AxiosInstance, 'get' | 'post'>>;
     facade = new CustomerSpendingFacade(client as unknown as AxiosInstance);
+  });
+
+  it('authenticates and returns the customer ID from the API', async () => {
+    client.post.mockResolvedValueOnce({ data: { customerId: 'customer-900' } });
+
+    await expect(facade.authenticate('demo-user', 'secret')).resolves.toEqual({
+      customerId: 'customer-900',
+    });
+    expect(client.post).toHaveBeenCalledWith('/auth/login', {
+      username: 'demo-user',
+      password: 'secret',
+    });
   });
 
   it('identifies the supported spending periods and calculates UTC ranges', () => {
