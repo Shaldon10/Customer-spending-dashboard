@@ -1,6 +1,7 @@
 import { DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { customerSpendingFacade } from '@capitech/data-access';
+import { AuthService } from '@capitech/login';
 
 type CustomerProfileData = Awaited<ReturnType<typeof customerSpendingFacade.getCustomerProfile>>;
 
@@ -11,15 +12,22 @@ type CustomerProfileData = Awaited<ReturnType<typeof customerSpendingFacade.getC
   styleUrl: './customer-profile.scss'
 })
 export class CustomerProfile implements OnInit {
-  readonly customerId = '12345';
+  customerId = '';
   readonly profile = signal<CustomerProfileData | null>(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly auth = inject(AuthService);
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
+      this.customerId = this.auth.getCustomerId() ?? '';
+      if (!this.customerId) {
+        this.error.set('Customer identity is unavailable. Please sign in again.');
+        this.loading.set(false);
+        return;
+      }
       void this.loadProfile();
     }
   }

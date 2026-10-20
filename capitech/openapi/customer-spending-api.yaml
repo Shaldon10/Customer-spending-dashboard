@@ -9,6 +9,35 @@ servers:
     description: Local API server
 
 paths:
+  /auth/login:
+    post:
+      summary: Authenticate the demo user
+      description: Demo-only endpoint. A production implementation must use a real identity provider.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Customer ID for a valid demo login, or null for invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [customerId]
+                properties:
+                  customerId:
+                    type: string
+                    nullable: true
+
   /customers/{customerId}/profile:
     get:
       summary: Get customer profile

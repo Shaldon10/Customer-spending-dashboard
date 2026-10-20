@@ -20,6 +20,7 @@ describe('BudgetGoals', () => {
   };
 
   beforeEach(async () => {
+    localStorage.setItem('capitech-demo-customer-id', '12345');
     jest.spyOn(customerSpendingFacade, 'getGoals').mockResolvedValue(goals);
 
     await TestBed.configureTestingModule({
@@ -44,6 +45,7 @@ describe('BudgetGoals', () => {
   });
 
   afterEach(() => {
+    localStorage.removeItem('capitech-demo-customer-id');
     jest.restoreAllMocks();
   });
 });

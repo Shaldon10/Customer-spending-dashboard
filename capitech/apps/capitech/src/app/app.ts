@@ -1,7 +1,10 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, OnInit, PLATFORM_ID, computed, inject, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, DestroyRef, OnInit, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
 import { customerSpendingFacade } from '@capitech/data-access';
+import { AuthService } from '@capitech/login';
 
 type CustomerProfileData = Awaited<ReturnType<typeof customerSpendingFacade.getCustomerProfile>>;
 
@@ -12,7 +15,12 @@ type CustomerProfileData = Awaited<ReturnType<typeof customerSpendingFacade.getC
   styleUrl: './app.scss',
 })
 export class App implements OnInit {
-  readonly customerId = '12345';
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly isLoginPage = signal(this.isLoginUrl(this.router.url));
   readonly sidebarHidden = signal(false);
   readonly profile = signal<CustomerProfileData | null>(null);
   readonly loading = signal(true);
@@ -36,10 +44,20 @@ export class App implements OnInit {
       : this.loading() ? 'Loading...' : 'Unavailable';
   });
 
-  private readonly platformId = inject(PLATFORM_ID);
-
   ngOnInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
+    this.router.events
+      .pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((event) => {
+        this.isLoginPage.set(this.isLoginUrl(event.urlAfterRedirects));
+        if (!this.isLoginPage()) {
+          void this.loadProfile();
+        }
+      });
+
+    if (isPlatformBrowser(this.platformId) && !this.isLoginPage()) {
       void this.loadProfile();
     }
   }
@@ -48,9 +66,25 @@ export class App implements OnInit {
     this.sidebarHidden.update((hidden) => !hidden);
   }
 
+  logout(): void {
+    this.auth.logout();
+    void this.router.navigate(['/login']);
+  }
+
+  private isLoginUrl(url: string): boolean {
+    return url.split(/[?#]/, 1)[0] === '/login';
+  }
+
   private async loadProfile(): Promise<void> {
+    const customerId = this.auth.getCustomerId();
+    if (!customerId) {
+      this.profile.set(null);
+      this.loading.set(false);
+      return;
+    }
+
     try {
-      this.profile.set(await customerSpendingFacade.getCustomerProfile(this.customerId));
+      this.profile.set(await customerSpendingFacade.getCustomerProfile(customerId));
     } catch {
       this.profile.set(null);
     } finally {

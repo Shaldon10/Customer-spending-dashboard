@@ -1,0 +1,46 @@
+<main class="login-page">
+  <section class="login-card" aria-labelledby="login-title">
+    <a class="brand" href="/" aria-label="Capitech Insights">
+      <span class="brand-mark" aria-hidden="true">C</span>
+      <span>
+        <span class="brand-name">Capitech</span>
+        <span class="brand-caption">INSIGHTS</span>
+      </span>
+    </a>
+
+    <h1 id="login-title">Welcome back</h1>
+    <p class="intro">Sign in to view your customer spending dashboard.</p>
+
+    <form (ngSubmit)="submit()" #loginForm="ngForm">
+      <label for="username">Username</label>
+      <input
+        id="username"
+        name="username"
+        type="text"
+        [(ngModel)]="username"
+        autocomplete="username"
+        required
+      />
+
+      <label for="password">Password</label>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        [(ngModel)]="password"
+        autocomplete="current-password"
+        required
+      />
+
+      @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+      }
+
+      <button type="submit" [disabled]="loginForm.invalid">Sign in</button>
+    </form>
+
+    <p class="demo-credentials">
+      Demo login: <strong>admin</strong> / <strong>capitech123</strong>
+    </p>
+  </section>
+</main>

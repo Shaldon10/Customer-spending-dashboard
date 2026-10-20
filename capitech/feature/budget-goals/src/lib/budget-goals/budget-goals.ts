@@ -1,6 +1,7 @@
 import { DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { customerSpendingFacade } from '@capitech/data-access';
+import { AuthService } from '@capitech/login';
 
 type GoalsData = Awaited<ReturnType<typeof customerSpendingFacade.getGoals>>;
 
@@ -11,7 +12,7 @@ type GoalsData = Awaited<ReturnType<typeof customerSpendingFacade.getGoals>>;
   styleUrl: './budget-goals.scss',
 })
 export class BudgetGoals implements OnInit {
-  readonly customerId = '12345';
+  customerId = '';
   readonly data = signal<GoalsData | null>(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
@@ -29,9 +30,16 @@ export class BudgetGoals implements OnInit {
   );
 
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly auth = inject(AuthService);
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
+      this.customerId = this.auth.getCustomerId() ?? '';
+      if (!this.customerId) {
+        this.error.set('Customer identity is unavailable. Please sign in again.');
+        this.loading.set(false);
+        return;
+      }
       void this.loadGoals();
     }
   }

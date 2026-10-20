@@ -7,6 +7,7 @@ import {
   spendingPeriodDateRange,
   type SpendingPeriod,
 } from '@capitech/data-access';
+import { AuthService } from '@capitech/login';
 
 type DashboardData = {
   profile: Awaited<ReturnType<typeof customerSpendingFacade.getCustomerProfile>>;
@@ -33,13 +34,14 @@ const fullCurrency = new Intl.NumberFormat('en-US', {
   styleUrl: './customer-dashboard.scss',
 })
 export class CustomerDashboard implements OnInit {
-  readonly customerId = '12345';
+  customerId = '';
   readonly selectedPeriod = signal<SpendingPeriod>('30d');
   readonly data = signal<DashboardData | null>(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly auth = inject(AuthService);
   private loadSequence = 0;
 
   @ViewChild('periodSelect')
@@ -51,6 +53,12 @@ export class CustomerDashboard implements OnInit {
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
+      this.customerId = this.auth.getCustomerId() ?? '';
+      if (!this.customerId) {
+        this.error.set('Customer identity is unavailable. Please sign in again.');
+        this.loading.set(false);
+        return;
+      }
       this.restorePeriodPreference();
       void this.loadDashboard();
     }

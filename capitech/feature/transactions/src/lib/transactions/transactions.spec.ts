@@ -34,6 +34,7 @@ describe('Transactions', () => {
   };
 
   beforeEach(async () => {
+    localStorage.setItem('capitech-demo-customer-id', '12345');
     localStorage.removeItem(periodPreferenceKey);
     jest.spyOn(customerSpendingFacade, 'getTransactions').mockResolvedValue(transactions);
     jest.spyOn(customerSpendingFacade, 'getSpendingSummary').mockImplementation(
@@ -137,6 +138,7 @@ describe('Transactions', () => {
   });
 
   afterEach(() => {
+    localStorage.removeItem('capitech-demo-customer-id');
     localStorage.removeItem(periodPreferenceKey);
     jest.restoreAllMocks();
   });

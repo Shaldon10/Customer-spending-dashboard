@@ -12,6 +12,20 @@
 	grid-template-columns: 0 minmax(0, 1fr);
 }
 
+.app-shell.login-mode {
+	display: block;
+	min-height: 100vh;
+}
+
+.login-mode .sidebar,
+.login-mode .menu-controls {
+	display: none;
+}
+
+.login-mode .page-content {
+	min-height: 100vh;
+}
+
 .sidebar {
 	position: sticky;
 	top: 0;
@@ -123,6 +137,24 @@
 .account:focus-visible {
 	outline: 2px solid #a8c3ff;
 	outline-offset: 3px;
+}
+
+.logout-button {
+	padding: 0.55rem 0.35rem;
+	border: 0;
+	border-radius: 6px;
+	color: #c6d1e2;
+	background: transparent;
+	font: inherit;
+	font-size: 0.78rem;
+	text-align: left;
+	cursor: pointer;
+}
+
+.logout-button:hover,
+.logout-button:focus-visible {
+	color: #fff;
+	background: #263751;
 }
 
 .account-copy {

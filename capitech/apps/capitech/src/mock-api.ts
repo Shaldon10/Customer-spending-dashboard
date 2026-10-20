@@ -217,6 +217,12 @@ const dateRangePresets = [
   { label: 'Last year', value: '1y' },
 ];
 
+const demoCustomer = {
+  customerId: '12345',
+  username: 'admin',
+  password: 'capitech123',
+};
+
 function queryString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
@@ -228,10 +234,21 @@ function queryNumber(value: unknown, fallback: number): number {
 
 export const mockApiRouter = Router();
 
+mockApiRouter.post('/auth/login', (req, res) => {
+  const body = req.body as { username?: unknown; password?: unknown } | undefined;
+
+  if (body?.username !== demoCustomer.username || body.password !== demoCustomer.password) {
+    res.json({ customerId: null });
+    return;
+  }
+
+  res.json({ customerId: demoCustomer.customerId });
+});
+
 mockApiRouter.get('/customers/:customerId/profile', (req, res) => {
   res.json({
     customerId: req.params['customerId'],
-    name: 'John Doe',
+    name: 'John Paige',
     email: 'john.doe@email.com',
     joinDate: '2023-01-15',
     accountType: 'premium',

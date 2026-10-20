@@ -38,6 +38,9 @@
       "@capitech/customer-profile": [
         "./feature/customer-profile/src/index.ts"
       ],
+      "@capitech/login": [
+        "./feature/login/src/index.ts"
+      ],
       "@capitech/data-access": [
         "./feature/data-access/index.ts"
       ]

@@ -1,4 +1,4 @@
-<div class="app-shell" [class.sidebar-hidden]="sidebarHidden()">
+<div class="app-shell" [class.sidebar-hidden]="sidebarHidden()" [class.login-mode]="isLoginPage()">
 	<aside
 		class="sidebar"
 		id="main-navigation"
@@ -32,6 +32,7 @@
 				<strong>{{ totalSpent() }}</strong>
 			</span>
 		</button>
+		<button class="logout-button" type="button" (click)="logout()">Sign out</button>
 	</aside>
 
 	<main class="page-content">

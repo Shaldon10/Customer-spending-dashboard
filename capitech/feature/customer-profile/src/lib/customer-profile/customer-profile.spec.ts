@@ -17,6 +17,7 @@ describe('CustomerProfile', () => {
   };
 
   beforeEach(async () => {
+    localStorage.setItem('capitech-demo-customer-id', '12345');
     jest.spyOn(customerSpendingFacade, 'getCustomerProfile').mockResolvedValue(profile);
 
     await TestBed.configureTestingModule({
@@ -30,6 +31,7 @@ describe('CustomerProfile', () => {
   });
 
   afterEach(() => {
+    localStorage.removeItem('capitech-demo-customer-id');
     jest.restoreAllMocks();
   });
 
